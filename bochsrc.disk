@@ -1,0 +1,29 @@
+#################################################################
+# Bochs的配置文件
+# Configuration file for Bochs
+#################################################################
+
+# how much memory the emulated machine will have
+megs: 32
+
+# filenameof ROM images
+romimage: file=/home/happy/Documents/bochs/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/home/happy/Documents/bochs/share/bochs/VGABIOS-lgpl-latest
+
+# which disk image will be used 这个是启动软盘，我们虚拟出来的那个a.img
+floppya:1_44=a.img, status=inserted
+
+# choose the boot disk 确定启动方式
+boot: disk
+
+# where do we send log messages?
+log: bochs.out
+
+# disable the mouse
+mouse: enabled=0
+
+# enable key mapping ,using US layout as default
+keyboard:keymap=/home/happy/Documents/bochs/share/bochs/keymaps/x11-pc-us.map
+
+# 加载磁盘
+ata0-master: type=disk, mode=flat, path="/home/yanran/github/yerOS/boot/boot.img", cylinders=59, heads=16, spt=63
