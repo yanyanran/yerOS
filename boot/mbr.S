@@ -43,8 +43,6 @@ SECTION MBR vstart=0x7c00 ;指定引导程序的起始(段)地址
                         ; bl 中是字符属性,属性黑底绿字(bl = 02h)
     int 0x10
 
-
-    jmp $       ; 使程序悬停在此
     
     message db "1 MBR" ;定义打印的字符串
     times 510-($-$$) db 0 ;用0填充本扇区除了最后两个魔数的剩余空间
