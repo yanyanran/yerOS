@@ -27,5 +27,4 @@ keyboard:keymap=/home/happy/Documents/bochs/share/bochs/keymaps/x11-pc-us.map
 
 # 硬盘设置
 # 加载磁盘
-ata0: enable=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, mode=flat, path="/home/yanran/github/yerOS/boot.img", cylinders=121, heads=16, spt=63
