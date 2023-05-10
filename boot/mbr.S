@@ -44,9 +44,9 @@ SECTION MBR vstart=0x7c00 ;指定引导程序的起始(段)地址
     mov eax, LOADER_START_SECTOR   ;起始扇区LBA地址（0x2）
     mov bx, LOADER_BASE_ADDR       ;写入的地址
     mov cx, 1                      ;待读入的扇区数
-    call rd_disk_m_16              ;以下读取程序的起始部分（一个扇区）
+    call rd_disk_m_16              ;以下读取程序的起始部分（一个扇区）ret回到这里继续执行
 
-    jmp LOADER_BASE_ADDR
+    jmp LOADER_BASE_ADDR           ;MBR将接力棒传给loader：0x900
 
 ; -----------------------------------------------------------
 ; 在16位模式下读取硬盘n个扇区
@@ -61,58 +61,58 @@ rd_disk_m_16:
 ;1、设置要读取的扇区数
     mov dx, 0x1f2
     mov al, cl
-    mov dx, al      ;读取的扇区数
+    out dx, al      ;读取的扇区数
     mov eax, esi    ;恢复ax
 
 ;2、将LBA地址存入0x1f3~0x1f6
-    ;LBA地址7~0位写入端口0x1f3
+    ;LBA地址7~0位写入端口0x1f3：LBA low
     mov dx, 0x1f3
     out dx, al
 
-    ;LBA地址15~8位写入端口0x1f4
+    ;LBA地址15~8位写入端口0x1f4：LBA mid
     mov cl, 8
-    shr eax, cl
+    shr eax, cl     ;右移到第8位
     mov dx, 0x1f4
     out dx, al
 
-    ;LBA地址23~16位写入端口0x1f5
+    ;LBA地址23~16位写入端口0x1f5：LBA high
     shr eax, cl
     mov dx, 0x1f5
     out dx, al
 
     shr eax, cl
-    and al, 0x0f    ;LBA第24~27位
-    or al, 0xe0     ;设置7~4位为1110, 表示LBA模式
+    and al, 0x0f    ;LBA第24~27位【与操作】
+    or al, 0xe0     ;设置7~4位为1110, 表示LBA模式【或操作】
     mov dx, 0x1f6
     out dx, al
 
 ;3、向0x1f7端口写入读命令，0x20
-    mov dx, 0x1f7
-    mov al. 0x20
+    mov dx, 0x1f7   ;【读：Status端口  写：Command端口】
+    mov al, 0x20
     out dx, al
 
 ;4、检测硬盘状态
 .not_ready:
     ;同一端口，写时表示写入命令字，读时表示读入硬盘状态
     nop
-    in al, dx
-    and al, 0x88    ;第4位为1表示硬盘控制器已准备好数据传输
+    in al, dx       ;将Status值读入al寄存器
+    and al, 0x88    ;第4位为1表示硬盘控制器已准备好数据传输【与操作保留第4、7位】
                     ;第 7 位为 1 表示硬盘忙
     cmp al, 0x08
     jnz .not_ready  ;若未准备好,继续等
 
 ;5、从0x1f0端口读数据
-    mov ax, di
+    mov ax, di      ;此时di存的是最初的cx-> 1
     mov dx, 256
     mul dx
-    mov cx, ax
+    mov cx, ax      ;cx为循环处理次数
 ;di为要读取的扇区数,一个扇区有512字节,每次读入一个字
 ;共需 di*512/2 次,所以 di*256
     mov dx, 0x1f0
 
 .go_on_read:
-    in ax, bx
-    mov [bx], ax
+    in ax, dx       ;in读
+    mov [bx], ax    ;往bx寄存器指向的内存中写
     add bx, 2
     loop .go_on_read
     ret
