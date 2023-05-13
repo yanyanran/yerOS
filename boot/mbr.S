@@ -43,7 +43,7 @@ SECTION MBR vstart=0x7c00 ;指定引导程序的起始(段)地址
 
     mov eax, LOADER_START_SECTOR   ;起始扇区LBA地址（0x2）
     mov bx, LOADER_BASE_ADDR       ;写入的地址
-    mov cx, 1                      ;待读入的扇区数
+    mov cx, 4                      ;待读入(加载loader.bin)的扇区数
     call rd_disk_m_16              ;以下读取程序的起始部分（一个扇区）ret回到这里继续执行
 
     jmp LOADER_BASE_ADDR           ;MBR将接力棒传给loader：0x900
@@ -51,7 +51,7 @@ SECTION MBR vstart=0x7c00 ;指定引导程序的起始(段)地址
 ; -----------------------------------------------------------
 ; 在16位模式下读取硬盘n个扇区
 ; -----------------------------------------------------------
-rd_disk_m_16:
+rd_disk_m_16:   ;加载loader.bin，进入保护模式
     ; eax=待读入LBA扇区号
     ; bx=将数据写入的内存地址
     ; cx=读入的扇区数
@@ -96,13 +96,13 @@ rd_disk_m_16:
     ;同一端口，写时表示写入命令字，读时表示读入硬盘状态
     nop
     in al, dx       ;将Status值读入al寄存器
-    and al, 0x88    ;第4位为1表示硬盘控制器已准备好数据传输【与操作保留第4、7位】
+    and al, 0x88    ;第3位为1表示硬盘控制器已准备好数据传输【与操作保留第4、7位】
                     ;第 7 位为 1 表示硬盘忙
     cmp al, 0x08
     jnz .not_ready  ;若未准备好,继续等
 
 ;5、从0x1f0端口读数据
-    mov ax, di      ;此时di存的是最初的cx-> 1
+    mov ax, di      ;此时di存的是最初的cx-> 4
     mov dx, 256
     mul dx
     mov cx, ax      ;cx为循环处理次数
