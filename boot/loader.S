@@ -3,7 +3,6 @@
 SECTION loader vstart=LOADER_BASE_ADDR  ;0x900
 LOADER_STACK_TOP equ LOADER_BASE_ADDR   ;LOADER_STACK_TOP：loader在保护模式下的栈
                                         ;LOADER_BASE_ADDR：loader在实模式下时的栈指针地址
-jmp loader_start
 
 ;构建全局描述表GDT，并分两段填充内部的段描述符（dd-> 4byte）
 GDT_BASE: dd 0x00000000         ;NO.0-> 不可用置0
@@ -28,11 +27,16 @@ SELECTOR_CODE equ (0x0001<<3) + TI_GDT + RPL0   ; 相当于((CODE_DESC - GDT_BAS
 SELECTOR_DATA equ (0x0002<<3) + TI_GDT + RPL0   ; 同上
 SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0  ; 同上
 
+; 当前偏移 loader.bin 文件头0x200字节，loader.bin的加载地址是0x900
+total_mem_bytes dd 0  ;保存内存容量（内存地址0xb03）
+
 ;以下是GDT的指针，前2字节（16位）是GDT界限，后4字节（32位）是GDT起始地址
 gdt_ptr dw GDT_LIMIT
         dd GDT_BASE
-loadermsg db '2 loader in real.'
 
+;人工对齐:total_mem_bytes4+gdt_ptr6+ards_buf244+ards_nr2，共 256 字节
+ards_buf times 244 db 0
+ards_nr dw 0          ;用于记录ards结构体数量
 
 ;------------------------------------------------------------
 ;INT 0x10
@@ -45,6 +49,10 @@ loadermsg db '2 loader in real.'
 ; 3—字符串中含显示字符和显示属性。显示后，光标位置改变
 
 loader_start:
+    ;int 15h eax = 0000E820h ,edx = 534D4150h ('SMAP') 获取内存布局'
+    xor ebx, ebx        ;第一次调用时，ebx值要为0
+
+
     mov sp, LOADER_BASE_ADDR
     mov bp, loadermsg   ; ES:BP = 字符串地址
     mov cx, 17          ; CX = 字符串长度

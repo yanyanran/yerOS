@@ -46,7 +46,7 @@ SECTION MBR vstart=0x7c00 ;指定引导程序的起始(段)地址
     mov cx, 4                      ;待读入(加载loader.bin)的扇区数
     call rd_disk_m_16              ;以下读取程序的起始部分（一个扇区）ret回到这里继续执行
 
-    jmp LOADER_BASE_ADDR           ;MBR将接力棒传给loader：0x900
+    jmp LOADER_BASE_ADDR + 0x300           ;MBR将接力棒传给loader：0x900
 
 ; -----------------------------------------------------------
 ; 在16位模式下读取硬盘n个扇区
