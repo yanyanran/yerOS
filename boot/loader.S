@@ -38,28 +38,83 @@ gdt_ptr dw GDT_LIMIT
 ards_buf times 244 db 0
 ards_nr dw 0          ;用于记录ards结构体数量
 
-;------------------------------------------------------------
-;INT 0x10
-;功能号:0x13-> 打印字符串
-;------------------------------------------------------------
-;AL=显示输出方式
-; 0—字符串中只含显示字符，其显示属性在 BL 中，显示后，光标位置不变
-; 1—字符串中只含显示字符，其显示属性在 BL 中，显示后，光标位置改变
-; 2—字符串中含显示字符和显示属性。显示后，光标位置不变
-; 3—字符串中含显示字符和显示属性。显示后，光标位置改变
 
+;------------------------------------------------------------
+;INT 0x15 中断
+;子功能号:0xE0820、0xE801、0x88
+;------------------------------------------------------------
 loader_start:
-    ;int 15h eax = 0000E820h ,edx = 534D4150h ('SMAP') 获取内存布局'
-    xor ebx, ebx        ;第一次调用时，ebx值要为0
+    ;------ int 15h eax = 0000E820h 获取内存大小 ------
+    xor ebx, ebx        ;第一次调用时，ebx值要为0（此处用异或）
+    mov edx, 0x534d4150 ;edx只赋值一次，循环体中不会改变
+    mov di, ards_buf    ;ards结构缓冲区(es:di)
+.e820_mem_get_loop:     ;循环获取每个ards内存范围描述结构
+    mov eax, 0x0000e820 ;执行int 0x15后，eax值变为0x534d4150，所以每次执行int前都要更新为子功能号
+    mov ecx, 20         ;ards地址范围描述符结构大小为20字节
+    int 0x15
+    jc .e820_mem_get_loop ;若cf位为1则有错误发生，尝试0xE801子功能
+    add di, cx          ;使di+20字节指向缓冲区中新的ards结构位置
+    inc word [ards_nr]  ;记录ards数量
+    cmp ebx, 0          ;若ebx为0且cf不为1,说明ards全部返回，当前已是最后一个
+    jnz .e820_mem_get_loop
 
+;在所有的ards结构中找出(base_add_low + length_low)的最大值，即内存容量
+    mov cx, [ards_nr]   ;遍历每一个ards结构体，循环次数是ards的数量
+    mov ebx, ards_buf
+    xor edx, edx        ;edx为最大内存容量，在此先清0
+.find_max_mem_area:     ;无需判断type是否为1,最大内存块一定是可被使用的
+    mov eax, [ebx]      ;base_add_low
+    add eax, [ebx+8]    ;length_low
+    add ebx, 20         ;指向缓冲区中下一个adrs结构
+    cmp edx, eax        ;冒泡排序，找出最大，edx寄存器始终是最大的内存容量
+    jge .next_ards
+    mov edx, eax        ;edx为总内存大小
+.next_ards:
+    loop .find_max_mem_area
+    jmp .mem_get_ok
 
-    mov sp, LOADER_BASE_ADDR
-    mov bp, loadermsg   ; ES:BP = 字符串地址
-    mov cx, 17          ; CX = 字符串长度
-    mov ax, 0x1301      ; AH 子功能号 = 13, AL 显示输出方式 = 01h
-    mov bx, 0x001f      ; 页号为0(BH = 0) 属性：蓝底粉红字(BL = 1fh)
-    mov dx, 0x1800      ; (DH､ DL)=坐标(0x18<24>行也就是最后一行<文本模式下行数0-24>､ 0x00列)-> int 0x10参数
-    int 0x10            ; 中断n
+;------ int 15h ax = E801h 获取内存大小，最大支持 4G ------
+; 返回后ax、cx值一样,KB为单位，bx、dx值一样，以64KB为单位【ax、cx寄存器：低16MB，bx、dx寄存器：16MB-4GB】
+.e820_failed_so_try_e801:
+    mov ax, 0xe801
+    int 0x51
+    jc .e801_failed_so_try88    ;若当前 e801 方法失败，就尝试 0x88 方法
+
+    ;1、算出低15MB的内存, ax、cx的内存数量以KB为单位【要转为byte】
+    mov cx, 0x400
+    mul cx              ;cx=1024kb, mul结果存在ax中（转byte）
+    shl edx, 16
+    and eax, 0x0000FFFF
+    or edx, eax         ;eax+edx=总内存大小
+    add edx, 0x100000   ;加1MB
+    mov esi, edx        ;备份低15MB的内存容量
+
+    ;2、将16MB以上的内存转为byte, bx、dx中的内存数量以64KB为单位
+    xor eax, eax
+    mov ax, bx
+    mov ecx, 0x10000   ;0x10000-> 64kb
+    mul ecx            
+    add esi, eax       ;0xE801只能测出4GB以内的内存，故32位eax足够了, edx肯定为0，只加eax便可
+    mov edx, esi       ;edx-> 总内存大小
+    jmp .mem_get_ok
+
+;----- int 15h ah = 0x88 获取内存大小，最大支持 64MB -----
+.e801_failed_so_try88:
+    mov ah, 0x88
+    int 0x15            ;ax存入KB为单位的内存容量
+    jc .error_hlt
+    and eax,0x0000FFFF
+
+    mov cx, 0x400
+    mul cx
+    shl edx, 16         
+    or edx, eax         ;积的低16位组合到edx
+    add edx,0x100000    ;加上1MB
+
+.error_hlt:
+
+.mem_get_ok:
+    mov [total_mem_bytes], edx  ;将内存换为byte单位后, 存入total_mem_bytes
 
 ;-------------------- 准备进入保护模式 -------------------------------
 ;1、打开A20
