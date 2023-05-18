@@ -144,3 +144,52 @@ p_mode_start:
     mov byte [gs:160], 'P'      ;往显存第80个字符的位置写P-> 1字符占2字节-> 偏移量2*80=160
 
     jmp $
+
+;-------------------- 创建页目录和页表 -------------------------------
+setup_page:         ;把页目录所占内存逐一清零
+    mov ecx, 4096   ;4KB
+    mov esi, 0
+.clean_page_dir:
+    mov byte [PAGE_DIR_TABLE_POS + esi], 0
+    inc esi
+    loop .clean_page_dir    ;loop通过操作ecx来完成循环
+
+;开始创建页目录项PDE
+.create_pde:
+    mov eax, PAGE_DIR_TABLE_POS
+    add eax, 0x1000     ;eax-> 0x101000 第一个页表的位置和属性
+    mov ebx, eax
+
+    or eax, PG_US_U | PG_RW_W | PG_P        ;加上0-11属性位，or=> add操作
+    ;eax：第一个页表的位置(0x101000)+属性(7)
+    ;让页目录项中的0项和0xc00项(第768个)都映射同一个页表（即第一个页表：内核），这是为将地址映射为内核地址做准备
+    mov [PAGE_DIR_TABLE_POS + 0x0], eax     ;第一个目录项是为了适应loader在开启分页模式前的1MB
+    mov [PAGE_DIR_TABLE_POS + 0xc00], eax
+
+;也就是页表的 0xc0000000～0xffffffff（1G内核） / 0x0～0xbfffffff（3G用户进程）
+    sub eax, 0x1000
+    mov [PAGE_DIR_TABLE_POS + 4092], eax    ; 使最后一个目录项指向页目录表自己的地址
+
+;创建页表项PTE
+    mov ecx, 256    ;1M低端内存/每页4KB = 256
+    mov esi, 0
+    mov edx, PG_US_U | PG_RW_W | PG_P
+.create_pte:
+    mov [ebx+esi*4],edx   ;ebx：0x101000（第一个页表地址）
+    addm edx, 4096
+    inc esi
+    loop .create_pte
+
+;创建内核其它页表的pde
+    mov eax, PAGE_DIR_TABLE_POS
+    add eax, 0x2000  ;eax：第二个页表的位置
+    or eax, PG_US_U | PG_RW_W | PG_P
+    mov ebx, PAGE_DIR_TABLE_POS
+    mov ecx, 254  ;目录项-第769～1022项数
+    mov esi, 769
+.create_kernel_pde:
+    mov [ebx+esi*4], eax
+    inc esi
+    add eax, 0x1000
+    loop .create_kernel_pde
+    ret
