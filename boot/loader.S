@@ -150,7 +150,7 @@ call setup_page     ;创建页目录表及页表
 sgdt [gdt_ptr]      ;存储到原来GDT位置
 
 ;修改显存段的段描述符基址，将GDT描述符中视频段描述符中的段基址+0xc0000000
-mov ebx, [gdt_ptr + 2]
+mov ebx, [gdt_ptr + 2]  ;ebx-> GDT地址
 or dword [ebx + 0x18 + 4], 0xc0000000   ;视频段是第3个段描述符，每个描述符是8byte，故0x18
 ;段描述符的高4byte的最高位是段基址的第31-24位
 
