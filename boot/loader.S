@@ -154,7 +154,7 @@ mov ebx, [gdt_ptr + 2]  ;ebx-> GDT地址
 or dword [ebx + 0x18 + 4], 0xc0000000   ;视频段是第3个段描述符，每个描述符是8byte，故0x18
 ;段描述符的高4byte的最高位是段基址的第31-24位
 
-;将GDT的基址加上0xc0000000使其成为内核所在的高地址
+;修改GDT的基址使其成为内核所在的高地址
 add dword [gdt_ptr + 2], 0xc0000000
 
 add esp, 0xc0000000   ;将栈指针同样映射到内核地址
@@ -169,7 +169,7 @@ or eax, 0x80000000
 mov cr0, eax
 
 ;在开启分页后，用GDT新的地址重新加载
-lgdt [gdt_ptr]  ;重新加载
+lgdt [gdt_ptr]  ;重新加载GDT
 
 mov byte [gs:160], 'V'     ;视频段段基址已经被更新，用字符V表示virtual addr
 
