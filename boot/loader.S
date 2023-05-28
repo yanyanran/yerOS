@@ -142,6 +142,13 @@ p_mode_start:
     mov ax, SELECTOR_VIDEO
     mov gs,ax
 
+;-------------------- 从硬盘加载kernel到内存缓冲区中 -------------------------------
+mov eax, KERNEL_START_SECTION   ;kernel.bin所在的扇区号
+mov ebx, KERNEL_BIN_BASE_ADDR   ;从磁盘读出后，写入到ebx指定的地址
+mov ecx, 200    ;读入的扇区数
+
+call rd_disk_m_32
+
 ;-------------------- 启动分页三部曲 -------------------------------
 
 call setup_page     ;创建页目录表及页表
@@ -171,9 +178,136 @@ mov cr0, eax
 ;在开启分页后，用GDT新的地址重新加载
 lgdt [gdt_ptr]  ;重新加载GDT
 
-mov byte [gs:160], 'V'     ;视频段段基址已经被更新，用字符V表示virtual addr
+jmp SELECTOR_CODE:enter_kernel  ;强制刷新流水线，更新GDT
+enter_kernel:
+    call kernel_init
+    mov esp, 0xc009f000
+    jmp KERNEL_ENTRY_POINT  ;跳转到kernel
 
-jmp $
+
+;-------------------- 将kernel.bin中的段（segment）拷贝到编译的虚拟地址处 -------------------------------
+;原理：
+;分析程序中的每个segment，如果segment类型不是PT_NULL（空程序类型），则将这段拷贝到编译的地址中
+;--------------------------------------------------------------------------------------------------
+kernel_init:
+    xor eax, eax
+    xor ebx, ebx    ;ebx-> 程序头表地址
+    xor ecx, ecx    ;ecx-> 程序头表中的program header数量
+    xor edx, edx    ;edx-> 一个program header大小，即e_phentsize
+
+    mov dx, [KERNEL_BIN_BASE_ADDR + 42] ;偏移文件42字节处的属性是e_phentsize，表示一个program header（段头）大小
+    mov ebx, [KERNEL_BIN_BASE_ADDR + 28];偏移文件28字节处是e_phoff，表示第一个program header在文件中的偏移量
+    add ebx, KERNEL_BIN_BASE_ADDR       ;ebx-> 程序头表（由program header组成）的物理基址
+    mov cx, [KERNEL_BIN_BASE_ADDR + 44] ;偏移文件44字节处是e_phnum，表示有几个program header（也就是有多少个段，一个program header对应一个段）
+
+;遍历每一个段
+.each_segment:
+    cmp byte [ebx + 0], PT_NULL ;p_type=PT_NULL -> 此program header未使用
+    je .PTNULL
+
+    ;为函数memcpy压入参数，参数是从右往左依次压入，函数原型类似于memcpy(dst, src, size)
+    push dword [ebx + 16]   ;program header中偏移16字节处是p_filesz-> 压入函数memcpy的第三个参数：size
+    mov eax, [ebx + 4]      ;距程序头偏移量为4字节处是p_offset
+    add eax, KERNEL_BIN_BASE_ADDR 
+    push eax                ;压入函数memcpy的第二个参数：源地址
+    push dword [ebx + 8]    ;压入函数memcpy的第一个参数：目的地址，偏移程序头8字节处是p_vaddr（目的地址）
+    call mem_cpy            ;调用mem_cpy完成段复制
+    add esp, 12             ;清理栈中压入的三个参数
+.PTNULL:
+    add ebx, edx    ;段为空段类型-> 此段不处理，ebx指向下一个program header
+    loop .each_segment
+    ret
+
+;-------------------- 逐字节拷贝mem_cpy(dst, src, size) -------------------------------
+;输入：栈中三个参数-> dst, src, size
+;输出：无
+;------------------------------------------------------------------------------------
+mem_cpy:
+    cld
+    push ebp    ;将ebp入栈备份
+    mov ebp, esp
+    push ecx    ;rep指令用到了ecx，但ecx对于外层段的循环还有用，所以先入栈备份
+    mov edi, [ebp + 8]  ;dst
+    mov esi, [ebp + 12] ;src
+    mov ecx, [ebp + 16] ;size
+    rep movsb   ;按照ecx中的值反复逐字节拷贝
+
+    ;恢复环境
+    pop ecx
+    pop ebp
+    ret
+
+; -----------------------------------------------------------
+; 在32位模式下读取硬盘n个扇区(文件) -- rd_disk_m_32
+; eax=待读入LBA扇区号
+; ebx=将数据写入的内存地址
+; ecx=读入的扇区数
+; -----------------------------------------------------------
+rd_disk_m_32:
+    ; eax=待读入LBA扇区号
+    ; bx=将数据写入的内存地址
+    ; cx=读入的扇区数
+    mov esi, eax    ;备份eax
+    mov di, cx      ;备份cx
+;读写硬盘
+;1、设置要读取的扇区数
+    mov dx, 0x1f2
+    mov al, cl
+    out dx, al      ;读取的扇区数
+    mov eax, esi    ;恢复ax
+
+;2、将LBA地址存入0x1f3~0x1f6
+    ;LBA地址7~0位写入端口0x1f3：LBA low
+    mov dx, 0x1f3
+    out dx, al
+
+    ;LBA地址15~8位写入端口0x1f4：LBA mid
+    mov cl, 8
+    shr eax, cl     ;右移到第8位
+    mov dx, 0x1f4
+    out dx, al
+
+    ;LBA地址23~16位写入端口0x1f5：LBA high
+    shr eax, cl
+    mov dx, 0x1f5
+    out dx, al
+
+    shr eax, cl
+    and al, 0x0f    ;LBA第24~27位【与操作】
+    or al, 0xe0     ;设置7~4位为1110, 表示LBA模式【或操作】
+    mov dx, 0x1f6
+    out dx, al
+
+;3、向0x1f7端口写入读命令，0x20
+    mov dx, 0x1f7   ;【读：Status端口  写：Command端口】
+    mov al, 0x20
+    out dx, al
+
+;4、检测硬盘状态
+.not_ready:
+    ;同一端口，写时表示写入命令字，读时表示读入硬盘状态
+    nop
+    in al, dx       ;将Status值读入al寄存器
+    and al, 0x88    ;第3位为1表示硬盘控制器已准备好数据传输【与操作保留第4、7位】
+                    ;第 7 位为 1 表示硬盘忙
+    cmp al, 0x08
+    jnz .not_ready  ;若未准备好,继续等
+
+;5、从0x1f0端口读数据
+    mov ax, di      ;此时di存的是最初的cx-> 4
+    mov dx, 256
+    mul dx
+    mov cx, ax      ;cx为循环处理次数
+;di为要读取的扇区数,一个扇区有512字节,每次读入一个字
+;共需 di*512/2 次,所以 di*256
+    mov dx, 0x1f0
+
+.go_on_read:
+    in ax, dx       ;in读
+    mov [ebx], ax    ;往bx寄存器指向的内存中写
+    add ebx, 2
+    loop .go_on_read
+    ret
 
 ;-------------------- 创建页目录和页表 -------- -----------------------
 setup_page:         ;把页目录所占内存逐一清零
