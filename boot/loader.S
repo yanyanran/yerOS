@@ -43,6 +43,7 @@ ards_nr dw 0          ;用于记录ards结构体数量
 ;INT 0x15 中断
 ;子功能号:0xE0820、0xE801、0x88
 ;------------------------------------------------------------
+;-> 0x00000c00
 loader_start:
     ;------ int 15h eax = 0000E820h 获取内存大小 ------
     xor ebx, ebx        ;第一次调用时，ebx值要为0（此处用异或）
@@ -200,6 +201,8 @@ kernel_init:
     add ebx, KERNEL_BIN_BASE_ADDR       ;ebx-> 程序头表（由program header组成）的物理基址
     mov cx, [KERNEL_BIN_BASE_ADDR + 44] ;偏移文件44字节处是e_phnum，表示有几个program header（也就是有多少个段，一个program header对应一个段）
 
+    ;add ebx, edx 
+    ;sub cx, 1
 ;遍历每一个段
 .each_segment:
     cmp byte [ebx + 0], PT_NULL ;p_type=PT_NULL -> 此program header未使用
