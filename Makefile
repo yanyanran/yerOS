@@ -20,4 +20,4 @@ run: image
 	bochs -f bochsrc.disk
 
 clear:
-	rm -rf *.bin *.out *.img *.lock
+	rm -rf *.bin *.out *.img *.lock *.o

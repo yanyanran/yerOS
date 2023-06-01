@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "M.C": "cpp",
-        "计科2106颜然.C": "cpp"
+        "计科2106颜然.C": "cpp",
+        "types.h": "c"
     }
 }

@@ -359,4 +359,4 @@ setup_page:         ;把页目录所占内存逐一清零
     inc esi
     add eax, 0x1000
     loop .create_kernel_pde
-    ret
+    ret 
