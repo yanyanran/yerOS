@@ -1,11 +1,11 @@
-mbrS = boot/mbr.S 
+mbrS = boot/mbr.asm 
 mbrBin = mbr.bin
-loaderS = boot/loader.S
+loaderS = boot/loader.asm 
 loaderBin = loader.bin
 kernelBin = kernel.bin
-printS = lib/kernel/print.S
+printS = lib/kernel/print.asm 
 kernelO = kernel.o
-kernelS = kernel/kernel.S
+kernelS = kernel/kernel.asm 
 
 build:
 	nasm -I include/ -o ${mbrBin} ${mbrS} 

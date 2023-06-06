@@ -5,10 +5,9 @@
 %define ERROR_CODE nop  ;已压入错误码，不操作
 %define ZERO push 0     ;没有压入错误码，保持栈格式统一手动压一个0
 extern put_str
+extern idt_table        ;C中注册的中断处理程序数组
 
 section .data
-intr_str db "interrupt occur!", 0xa, 0
-
 global intr_entry_table
 intr_entry_table:
     ;多行宏-> VECTOR（%1-> 中断向量号 %2-> nop/push 0的维持栈格式操作）
@@ -16,22 +15,38 @@ intr_entry_table:
     section .text
     intr%1entry:
         %2
-        push intr_str   
-        call put_str
-        add esp, 4      ;esp跳过参数intr_str
+        ;保存上下文环境
+        push ds
+        push es
+        push fs
+        push gs
+        pushad  ;压入8个32位寄存器
 
         ;8259A设置了手动结束中断-> 发送中断结束命令EOI（0x20）
         mov al, 0x20
         out 0xa0, al    ;发从片
         out 0x20, al    ;发主片
 
-        ;跨过error_code，中断返回
-        add esp, 4
-        iret
+        push %1     ;压入中断向量号
+        call [idt_table + %1*4];调用idt_table中的C版本中断处理函数
+        jmp intr_exit
 
     section .data
         dd intr%1entry  ;存储各个中断入口程序的地址，形成intr_entry_table数组 
     %endmacro
+
+section .text
+global intr_exit
+intr_exit:
+    ;恢复上下文环境
+    add esp, 4  ;跳过中断号
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    add esp, 4  ;跳过error_code
+    iretd
 
 ;宏定义中断处理程序-> 预处理后，将存在33个中断处理程序
 ;处理器内部固定异常类型（0-19）
@@ -69,4 +84,5 @@ VECTOR 0x1d, ZERO
 VECTOR 0x1e, ERROR_CODE ;含错误码
 VECTOR 0x1f, ZERO
 ;可用中断向量号（320->）
-VECTOR 0x20, ZERO
+VECTOR 0x20, ZERO   ;时钟中断
+VECTOR 0x21, ZERO
