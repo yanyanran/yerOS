@@ -1,10 +1,12 @@
+#include "debug.h"
 #include "init.h"
 #include "print.h"
 
 int main(void) {
   put_str("I am kernel\n");
   init_all();
-  asm volatile("sti"); // 演示中断处理，临时打开中断
-  while (1)
-    ;
+  ASSERT(1 == 2); // test
+  while (1) {
+  };
+  return 0;
 }

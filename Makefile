@@ -21,7 +21,8 @@ image: build
 	gcc -nostdlib -I kernel/ -I lib/kernel -m32 -c -o interrupt.o kernel/interrupt.c
 	gcc -nostdlib -I kernel/ -I lib/kernel -m32 -c -o init.o kernel/init.c
 	gcc -nostdlib -I kernel/ -I lib/kernel -m32 -c -o timer.o device/timer.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o
+	gcc -nostdlib -I kernel/ -I lib/kernel -m32 -c -o debug.o kernel/debug.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image
