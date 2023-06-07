@@ -7,7 +7,6 @@
 #include "io.h"
 #include "print.h"
 #include "stdint.h"
-#include <stdint.h>
 #define IDT_DESC_CNT 0x21 // 目前总共支持的中断数:33
 #define PIC_M_CTRL 0x20   // 主片控制端口
 #define PIC_M_DATA 0x21   // 主片数据端口
