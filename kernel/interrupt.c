@@ -91,7 +91,7 @@ static void general_intr_handler(uint8_t vec_nr) {
 static void exception_init(void) {
   int i;
   // idt_table中的函数在进入中断后根据中断向量号调用
-  for (int i = 0; i < IDT_DESC_CNT; i++) {
+  for (i = 0; i < IDT_DESC_CNT; i++) {
     idt_table[i] = general_intr_handler; // 默认，以后注册具体处理函数
     intr_name[i] = "unknown";
   }
