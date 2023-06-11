@@ -54,7 +54,7 @@ static void pic_init() {
   outb(PIC_M_DATA, 0xfe);
   outb(PIC_S_DATA, 0xff);
 
-  put_str("pic_init done\n");
+  put_str("   pic_init done\n");
 }
 
 // 创建中断门描述符
@@ -73,7 +73,7 @@ static void idt_desc_init(void) {
   for (i = 0; i < IDT_DESC_CNT; i++) {
     make_idt_desc(&idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);
   }
-  put_str("idt_desc_init done\n");
+  put_str("   idt_desc_init done\n");
 }
 
 // 通用中断处理函数（异常处理）

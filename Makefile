@@ -26,7 +26,8 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o debug.o kernel/debug.c
 	gcc ${include} ${GCC_FLAGS} -o string.o lib/string.c
 	gcc ${include} ${GCC_FLAGS} -o bitmap.o lib/kernel/bitmap.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o
+	gcc ${include} ${GCC_FLAGS} -o memory.o kernel/memory.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image
