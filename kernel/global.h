@@ -1,6 +1,8 @@
-#ifndef __KERNEL_GLOBAL_H
-#define __KERNEL_GLOBAL_H
+#ifndef KERNEL_GLOBAL
+#define KERNEL_GLOBAL
 #include "stdint.h"
+
+#define NULL 0
 
 typedef enum { false, true } bool;
 
@@ -29,4 +31,4 @@ typedef enum { false, true } bool;
 #define IDT_DESC_ATTR_DPL3                                                     \
   ((IDT_DESC_P << 7) + (IDT_DESC_DPL3 << 5) + IDT_DESC_32_TYPE)
 
-#endif /* __KERNEL_GLOBAL_H */
+#endif /* KERNEL_GLOBAL */

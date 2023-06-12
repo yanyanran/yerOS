@@ -2,8 +2,6 @@
 #include "debug.h"
 #include "global.h"
 
-#define NULL 0
-
 // 内存区域的数据初始化（内存分配时的数据清零）=>
 // 将dst_起始的size个字节置为value
 void memset(void *dst_, uint8_t value, uint32_t size) {
