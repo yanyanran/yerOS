@@ -11,6 +11,7 @@ struct virtual_addr {
 
 extern struct pool kernel_pool, user_pool;
 void *get_kernel_pages(uint32_t pg_cnt);
+void mem_init();
 
 // 内存池标记，用于判断用哪个内存池（内核/用户）
 enum pool_flags { PF_KERNEL = 1, PF_USER = 2 };
