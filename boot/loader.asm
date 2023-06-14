@@ -182,7 +182,7 @@ lgdt [gdt_ptr]  ;重新加载GDT
 jmp SELECTOR_CODE:enter_kernel  ;强制刷新流水线，更新GDT
 enter_kernel:
     call kernel_init
-    mov esp, 0xc009f000
+    mov esp, 0xc009f000     ;内核主线程栈顶
     jmp KERNEL_ENTRY_POINT  ;跳转到kernel
 
 
