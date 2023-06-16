@@ -82,9 +82,28 @@ static void general_intr_handler(uint8_t vec_nr) {
   if (vec_nr == 0x27 || vec_nr == 0x2f) {
     return;
   }
-  put_str("int vector : 0x");
-  put_int(vec_nr);
-  put_char('\n');
+  set_cursor(0); // 光标置0
+  int cursor_pos = 0;
+  while (cursor_pos < 320) { // 4行空格
+    put_char(' ');
+    cursor_pos++;
+  }
+
+  set_cursor(0);
+  put_str("!!!       excetion messge begin          !!!\n");
+  set_cursor(88); // 第2行第8个地方开始打印
+  put_str(intr_name[vec_nr]);
+  if (vec_nr == 14) { // pagefault缺页异常，将缺失地址打印出来并悬停
+    int page_fault_vaddr = 0;
+    asm("movl %%cr2, %0" : "=r"(page_fault_vaddr)); // cr2存放造成pagefault地址
+
+    put_str("\npage fault addr is ");
+    put_int(page_fault_vaddr);
+  }
+
+  put_str("\n!!!       excetion messge end          !!!\n");
+  while (1)
+    ; // 到这不再会被中断
 }
 
 // 完成一般中断处理函数的注册、异常名的注册
@@ -143,6 +162,11 @@ enum intr_status intr_disable() {
     old_status = INTR_OFF;
     return old_status;
   }
+}
+
+// 注册中断处理函数
+void register_handler(uint8_t vector_no, intr_handler func) {
+  idt_table[vector_no] = func;
 }
 
 // 将中断状态设置为status

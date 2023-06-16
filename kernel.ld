@@ -1,6 +1,6 @@
 ENTRY(main)
 SECTIONS
-{
+{   
     /* 段起始位置 */
 
     . = 0xc0001500;

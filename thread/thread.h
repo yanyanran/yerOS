@@ -1,5 +1,6 @@
 #ifndef THREAD_THREAD
 #define THREAD_THREAD
+#include "list.h"
 #include "stdint.h"
 
 // 自定义通用函数类型，它将在很多线程函数中作为形参类型
@@ -42,9 +43,9 @@ struct intr_stack {
   uint32_t ss;
 };
 
-/***************** 线程栈 thread_stack *******************
- * 线程自己的栈，用于存储线程中待执行函数，位置不固定
- *******************************************************/
+/***************** 线程栈 thread_stack *******************************************
+ * 线程自己的栈，位置不固定（当前执行函数没有线程栈，调度切换线程时才创建，被调度时被pop弹出）
+ *******************************************************************************/
 struct thread_stack {
   uint32_t ebp;
   uint32_t ebx;
@@ -62,14 +63,24 @@ struct thread_stack {
 
 // 进程/线程pcb，程序控制块
 struct task_struct {
-  uint32_t *self_kstack; // 内核栈顶指针
+  uint32_t *self_kstack; // 栈顶指针
   enum task_status status;
-  uint8_t priority; // 线程优先级
   char name[16];
+  uint8_t priority; // 线程优先级
+
+  uint8_t ticks;          // 上cpu执行的时间（优先级越高ticks越大
+  uint32_t elapsed_ticks; // 上cpu运行后占用的时间（任务执行了多久
+  struct list_elem general_tag;  // 一般list队列中的结点
+  struct list_elem all_list_tag; // thread_all_list中的结点
+
+  uint32_t *pgdir;      // 进程自己页表的虚拟地址
   uint32_t stack_magic; // 栈的边界标记，检测栈的溢出
 };
 
 struct task_struct *thread_start(char *name, int prio, thread_func func,
                                  void *func_arg);
+struct task_struct *running_thread();
+void schedule();
+void thread_init(void);
 
 #endif /* THREAD_THREAD */

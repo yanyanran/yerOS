@@ -78,7 +78,7 @@ put_char:
     inc bx  ;bx+1（写字符属性）
     mov byte [gs:bx], 0x07  ;属性：黑屏白字
     shr bx, 1
-    jmp .set_cursor
+    jmp set_cursor
 
 .put_other:
     shl bx, 1
@@ -88,7 +88,7 @@ put_char:
     shr bx, 1   ;恢复老光标值
     inc bx      ;下一个光标值
     cmp bx, 2000
-    jl .set_cursor  ;光标值<2000（屏幕字符数）表示没写到显存最后-> 去设置新光标值
+    jl set_cursor  ;光标值<2000（屏幕字符数）表示没写到显存最后-> 去设置新光标值
                     ;否则-> 滚屏
 
 ;/r/n一并处理：光标值-除80的余数-> 取整
@@ -104,7 +104,7 @@ put_char:
     add bx, 80      ;光标移到行首
     cmp bx, 2000
 .is_line_feed_end:
-    jl .set_cursor
+    jl set_cursor
 
 ;;;;;;;;; 超出屏幕大小-> 滚屏 ;;;;;;;;;
 ;屏幕行范围是 0～24，滚屏的原理-> 屏幕的第 1～24 行搬运到第 0～23 行，再将第 24 行用空格填充
@@ -125,7 +125,8 @@ put_char:
     mov bx, 1920    ;将光标值重置为1920，也就是最后一行的首字符
 
 ;;;;;;;;; 设置光标为bx值 ;;;;;;;;;
-.set_cursor:
+global set_cursor
+set_cursor:
     ;1、先设置高8位
     mov dx, 0x03d4
     mov al, 0x0e

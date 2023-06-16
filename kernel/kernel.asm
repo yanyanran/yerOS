@@ -13,9 +13,9 @@ intr_entry_table:
     ;多行宏-> VECTOR（%1-> 中断向量号 %2-> nop/push 0的维持栈格式操作）
     %macro VECTOR 2
     section .text
+    ;任务保护上下文点1（中断前的全部寄存器）
     intr%1entry:
         %2
-        ;保存上下文环境
         push ds
         push es
         push fs
@@ -46,7 +46,7 @@ intr_exit:
     pop es
     pop ds
     add esp, 4  ;跳过error_code
-    iretd
+    iretd       ;中断后的执行线程到此处执行线程对应用户程序
 
 ;宏定义中断处理程序-> 预处理后，将存在33个中断处理程序
 ;处理器内部固定异常类型（0-19）
