@@ -29,7 +29,8 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o memory.o kernel/memory.c
 	gcc ${include} ${GCC_FLAGS} -o thread.o thread/thread.c
 	gcc ${include} ${GCC_FLAGS} -o list.o lib/kernel/list.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o
+	gcc ${include} ${GCC_FLAGS} -o sync.o thread/sync.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image

@@ -43,7 +43,8 @@ struct intr_stack {
   uint32_t ss;
 };
 
-/***************** 线程栈 thread_stack *******************************************
+/***************** 线程栈 thread_stack
+ ********************************************
  * 线程自己的栈，位置不固定（当前执行函数没有线程栈，调度切换线程时才创建，被调度时被pop弹出）
  *******************************************************************************/
 struct thread_stack {
@@ -82,5 +83,7 @@ struct task_struct *thread_start(char *name, int prio, thread_func func,
 struct task_struct *running_thread();
 void schedule();
 void thread_init(void);
+void thread_block(enum task_status stat);
+void thread_unblock(struct task_struct *pthread);
 
 #endif /* THREAD_THREAD */

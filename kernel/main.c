@@ -15,7 +15,9 @@ int main(void) {
 
   intr_enable(); // 打开中断，使时钟中断起作用
   while (1) {
+    intr_disable();
     put_str("Main ");
+    intr_enable();
   };
   return 0;
 }
@@ -24,13 +26,17 @@ int main(void) {
 void k_thread_a(void *arg) {
   char *para = arg;
   while (1) {
+    intr_disable();
     put_str(para);
+    intr_enable();
   }
 }
 
 void k_thread_b(void *arg) {
   char *para = arg;
   while (1) {
+    intr_disable();
     put_str(para);
+    intr_enable();
   }
 }

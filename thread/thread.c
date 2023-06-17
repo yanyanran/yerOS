@@ -34,8 +34,8 @@ static void kernel_thread(thread_func *func, void *func_arg) {
 
 // 初始化线程栈，将待执行func和func_arg放到栈中相应位置
 void thread_create(struct task_struct *pthread, thread_func func,
-                   void *func_arg) { 
-  //pthread->self_kstack -= sizeof(struct intr_stack); // 预留中断使用栈的空间
+                   void *func_arg) {
+  // pthread->self_kstack -= sizeof(struct intr_stack); // 预留中断使用栈的空间
   pthread->self_kstack -= sizeof(struct thread_stack); // 预留线程栈空间
 
   struct thread_stack *kthread_stack =
@@ -125,4 +125,34 @@ void thread_init(void) {
   list_init(&thread_all_list);
   make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
   put_str("thread_init done\n");
+}
+
+// 线程自愿阻塞，标志状态为stat
+void thread_block(enum task_status stat) {
+  // TASK_BLOCKED、TASK_WAITING、TASK_HANGING三种状态不会被调度
+  ASSERT(((stat == TASK_BLOCKED) || (stat == TASK_WAITING) ||
+          (stat == TASK_HANGING)));
+  enum intr_status old_status = intr_disable();
+  struct task_struct *cur_thread = running_thread();
+  cur_thread->status = stat; // 修改状态为非RUNNING，不让其回到ready_list中
+  schedule();                // 将当前线程换下处理器
+  intr_set_status(old_status); // 待当前线程被解除阻塞后才继续运行
+}
+
+// 线程唤醒
+void thread_unblock(struct task_struct *pthread) {
+  enum intr_status old_status = intr_disable();
+  ASSERT(((pthread->status == TASK_BLOCKED) ||
+          (pthread->status == TASK_WAITING) ||
+          (pthread->status == TASK_HANGING)));
+  if (pthread->status != TASK_READY) {
+    ASSERT(!elem_find(&thread_ready_list, &pthread->general_tag));
+    if (elem_find(&thread_ready_list, &pthread->general_tag)) {
+      PANIC("thread_unblock: blocked thread in ready_list\n");
+    }
+    list_push(&thread_ready_list,
+              &pthread->general_tag); // 放在就绪队列最前面(尽快调度
+    pthread->status = TASK_READY;
+  }
+  intr_set_status(old_status);
 }
