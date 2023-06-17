@@ -17,4 +17,8 @@ struct lock {
   uint32_t holder_repeat_nr;  // 锁持有者重复申请锁的次数
 };
 
+void lock_init(struct lock *plock);
+void lock_acquire(struct lock *plock);
+void lock_release(struct lock *plock);
+
 #endif /* THREAD_SYNC */
