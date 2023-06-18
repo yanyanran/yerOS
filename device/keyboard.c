@@ -1,6 +1,7 @@
 #include "global.h"
 #include "interrupt.h"
 #include "io.h"
+#include "ioqueue.h"
 #include "print.h"
 #include "stdint.h"
 
@@ -33,6 +34,8 @@
 #define ctrl_r_make 0xe01d
 #define ctrl_r_break 0xe09d
 #define caps_lock_make 0x3a
+
+struct ioqueue kbd_buf; // 键盘缓冲区
 
 // 记录相应键是否按下，ext_scancode记录通码是否以0xe0开头
 static bool ctrl_status, shift_status, alt_status, caps_lock_status,
@@ -164,7 +167,11 @@ static void intr_keyboard_handler(void) {
     char cur_char = keymap[index][shift]; // 找到对应ASCII字符
 
     if (cur_char) { // 只处理ASCII码不为0的键
-      put_char(cur_char);
+      // 若缓冲区未满且待加入的cur_char不为0，则将其加入到缓冲区中
+      if (!ioq_full(&kbd_buf)) {
+        put_char(cur_char); // 临时的
+        ioq_putchar(&kbd_buf, cur_char);
+      }
       return;
     }
 
@@ -185,6 +192,7 @@ static void intr_keyboard_handler(void) {
 // 键盘初始化
 void keyboard_init() {
   put_str("keyboard_init start\n");
+  ioqueue_init(&kbd_buf);
   register_handler(0x21, intr_keyboard_handler);
   put_str("keyboard_init done\n");
 }

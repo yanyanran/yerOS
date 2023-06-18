@@ -50,12 +50,8 @@ static void pic_init() {
   outb(PIC_S_DATA, 0x02); // ICW3: 设置从片连接到主片的IR2引脚
   outb(PIC_S_DATA, 0x01);
 
-  // 打开主片上IR0（只接受时钟中断）
-  // outb(PIC_M_DATA, 0xfe);
-  // outb(PIC_S_DATA, 0xff);
-
-  // 测试键盘（只打开键盘中断）
-  outb(PIC_M_DATA, 0xfd);
+  // 打开键盘、时钟中断
+  outb(PIC_M_DATA, 0xfc);
   outb(PIC_S_DATA, 0xff);
 
   put_str("   pic_init done\n");
