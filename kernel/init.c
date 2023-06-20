@@ -5,6 +5,7 @@
 #include "print.h"
 #include "thread.h"
 #include "timer.h"
+#include "tss.h"
 
 // 负责初始化所有模块
 void init_all() {
@@ -15,4 +16,5 @@ void init_all() {
   thread_init();   // 初始化线程环境
   console_init();  // 初始化终端
   keyboard_init(); // 初始化键盘
+  tss_init();      // 初始化任务状态表
 }
