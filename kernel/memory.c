@@ -170,7 +170,7 @@ void *get_user_pages(uint32_t pg_cnt) {
 }
 
 // 申请一页内存，并将vaddr映射到该页（即可指定虚拟地址
-void *get_a_pages(enum pool_flags pf, uint32_t vaddr) {
+void *get_a_page(enum pool_flags pf, uint32_t vaddr) {
   struct pool *mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
   lock_acquire(&mem_pool->lock);
   struct task_struct *cur = running_thread();

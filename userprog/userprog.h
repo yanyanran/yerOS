@@ -1,0 +1,8 @@
+#ifndef USERPROG_USERPROG
+#define USERPROG_USERPROG
+
+#define USER_STACK3_VADDR (0xc0000000 - 0x1000)
+#define USER_VADDR_START 0x8048000
+#define default_prio 20
+
+#endif /* USERPROG_USERPROG */

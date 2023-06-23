@@ -4,7 +4,7 @@
 #include "string.h"
 #include "thread.h"
 
-// 任务状态段tss-> CPU维护
+// 任务状态段tss-> CPU维护（全局唯一）
 struct tss {
   uint32_t backlink;
   uint32_t *esp0;
@@ -37,7 +37,7 @@ struct tss {
 static struct tss tss;
 #define PG_SIZE 4096
 
-// 更新tss中esp0为pthread的0级栈
+// 更新tss中的esp0-> pthread的0级栈
 void update_tss_esp(struct task_struct *pthread) {
   // Linux任务切换-> 仅修改TSS中特权级0对应的栈
   tss.esp0 = (uint32_t *)((uint32_t)pthread + PG_SIZE);

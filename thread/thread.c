@@ -6,6 +6,7 @@
 #include "list.h"
 #include "memory.h"
 #include "print.h"
+#include "process.h"
 #include "stdint.h"
 #include "string.h"
 
@@ -116,6 +117,11 @@ void schedule() {
   struct task_struct *next =
       elem2entry(struct task_struct, general_tag, thread_tag);
   next->status = TASK_RUNNING;
+
+  /* 激活页表，并根据任务是否为进程来修改tss.esp0 */
+  process_active(next);
+  // 从此之后进程/线程一律作为内核线程去处理（0特权级、使用内核页表）
+
   switch_to(cur, next); // 任务切换
 }
 
