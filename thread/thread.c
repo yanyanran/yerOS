@@ -37,7 +37,7 @@ static void kernel_thread(thread_func *func, void *func_arg) {
 // 初始化线程栈，将待执行func和func_arg放到栈中相应位置
 void thread_create(struct task_struct *pthread, thread_func func,
                    void *func_arg) {
-  // pthread->self_kstack -= sizeof(struct intr_stack); // 预留中断使用栈的空间
+  pthread->self_kstack -= sizeof(struct intr_stack); // 预留中断使用栈的空间
   pthread->self_kstack -= sizeof(struct thread_stack); // 预留线程栈空间
 
   struct thread_stack *kthread_stack =

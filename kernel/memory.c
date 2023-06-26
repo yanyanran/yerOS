@@ -57,7 +57,7 @@ static void *vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
     vaddr_start = cur->userprog_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
 
     // (0xc0000000-PG_SIZE)-> 用户3级栈
-    ASSERT((uint32_t)vaddr_start < (0xc000000 - PG_SIZE));
+    ASSERT((uint32_t)vaddr_start < (0xc0000000 - PG_SIZE));
   }
   return (void *)vaddr_start;
 }
