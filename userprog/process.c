@@ -117,7 +117,7 @@ void process_execute(void *filename, char *name) { // filename：用户进程地
   ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
   list_append(&thread_ready_list, &thread->general_tag);
 
-  ASSERT(!elem_find(&thread_ready_list, &thread->all_list_tag));
-  list_append(&thread_ready_list, &thread->all_list_tag);
+  ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
+    list_append(&thread_all_list, &thread->all_list_tag);
   intr_set_status(old_status);
 }
