@@ -109,7 +109,7 @@ static char keymap[][2] = {
 
 // 键盘中断处理程序
 static void intr_keyboard_handler(void) {
-  bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
+  //bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
   bool shift_down_last = shift_status;
   bool caps_lock_last = caps_lock_status;
   bool break_code;

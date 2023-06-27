@@ -7,6 +7,7 @@
 
 // 自定义通用函数类型，它将在很多线程函数中作为形参类型
 typedef void thread_func(void *);
+typedef int16_t pid_t;
 
 // 进程/线程状态
 enum task_status {
@@ -66,6 +67,7 @@ struct thread_stack {
 // 进程/线程pcb，程序控制块
 struct task_struct {
   uint32_t *self_kstack; // 栈顶指针
+  pid_t pid;
   enum task_status status;
   char name[16];
   uint8_t priority; // 线程优先级

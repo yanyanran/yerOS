@@ -9,6 +9,7 @@
 #include "process.h"
 #include "stdint.h"
 #include "string.h"
+#include "sync.h"
 
 #define PG_SIZE 4096
 
@@ -16,6 +17,7 @@ struct task_struct *main_thread; // 主线程pcb
 struct list thread_ready_list;
 struct list thread_all_list;
 static struct list_elem *thread_tag; // 保存队列中的线程结点
+struct lock pid_lock;                // 分配pid锁
 
 // 保存cur线程的寄存器映像，将下个线程next的寄存器映像装载到处理器
 extern void switch_to(struct task_struct *cur, struct task_struct *next);
@@ -26,6 +28,15 @@ struct task_struct *running_thread() {
   asm("mov %%esp, %0" : "=g"(esp));
   return (struct task_struct *)(esp &
                                 0xfffff000); // 取esp整数部分，即pcb起始地址
+}
+
+// 分配pid
+static pid_t allocate_pid(void) {
+  static pid_t next_pid = 0;
+  lock_acquire(&pid_lock);
+  next_pid++;
+  lock_release(&pid_lock);
+  return next_pid;
 }
 
 // 由kernel_thread去执行func(func_arg)
@@ -55,6 +66,7 @@ void thread_create(struct task_struct *pthread, thread_func func,
 // 初始化线程基本信息
 void init_thread(struct task_struct *pthread, char *name, int prio) {
   memset(pthread, 0, sizeof(*pthread)); // PCB一页清0
+  pthread->pid = allocate_pid();
   strcpy(pthread->name, name);
 
   if (pthread == main_thread) {
@@ -130,6 +142,7 @@ void thread_init(void) {
   put_str("thread_init start\n");
   list_init(&thread_ready_list);
   list_init(&thread_all_list);
+  lock_init(&pid_lock);
   make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
   put_str("thread_init done\n");
 }

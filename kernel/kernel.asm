@@ -100,3 +100,34 @@ VECTOR 0x2c, ZERO   ;ps/2鼠标
 VECTOR 0x2d, ZERO   ;fpu浮点单元异常
 VECTOR 0x2e, ZERO   ;硬盘
 VECTOR 0x2f, ZERO   ;保留
+
+; -----------------------------------------------------------
+; 0x80号中断
+; -----------------------------------------------------------
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+;1、保存上下文
+    push 0      ;统一栈格式
+    push ds
+    push es
+    push fs
+    push gs
+    pushad  ;压入8个32位寄存器（eax,ecx,edx,ebx,esp,ebp,esi,edi）
+
+    push 0x80   ;统一栈格式
+
+;2、为系统调用子功能传入参数(3-1)
+    push edx
+    push ecx
+    push edx
+
+;3、调用子功能处理函数
+    call [syscall_table + eax*4]
+    add esp, 12 ;跨过三个参数
+
+;4、将call调用后的返回值存入当前内核栈中eax的位置
+    mov [esp+8*4], eax
+    jmp intr_exit   ;intr_exit返回，恢复上下文

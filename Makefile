@@ -5,7 +5,7 @@ loaderBin = loader.bin
 kernelBin = kernel.bin
 printS = lib/kernel/print.asm 
 kernelS = kernel/kernel.asm
-include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/
+include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/ -I lib/user
 GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector
 
 build:
@@ -35,7 +35,9 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o ioqueue.o device/ioqueue.c
 	gcc ${include} ${GCC_FLAGS} -o tss.o userprog/tss.c
 	gcc ${include} ${GCC_FLAGS} -o process.o userprog/process.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o
+	gcc ${include} ${GCC_FLAGS} -o syscall.o lib/user/syscall.c
+	gcc ${include} ${GCC_FLAGS} -o syscall_init.o userprog/syscall_init.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image
