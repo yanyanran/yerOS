@@ -37,7 +37,8 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o process.o userprog/process.c
 	gcc ${include} ${GCC_FLAGS} -o syscall.o lib/user/syscall.c
 	gcc ${include} ${GCC_FLAGS} -o syscall_init.o userprog/syscall_init.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o
+	gcc ${include} ${GCC_FLAGS} -o stdio.o lib/stdio.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o stdio.o
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image

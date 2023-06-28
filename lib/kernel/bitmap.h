@@ -8,7 +8,7 @@
 // 伪数组性质
 struct bitmap {
   uint32_t btmp_bytes_len; // 位图字节长度
-  uint8_t *bits;           // 位图指针（单字节）=> 记录位图地址
+  uint8_t *bits;           // 位图指针（单字节）=> 记录位图地址 
 };
 
 void bitmap_init(struct bitmap *btmp);
