@@ -1,12 +1,13 @@
 #ifndef KERNEL_MEMORY
 #define KERNEL_MEMORY
 #include "bitmap.h"
+#include "list.h"
 #include "stdint.h"
 
 // 虚拟地址池，用于虚拟地址管理
 struct virtual_addr {
-  struct bitmap vaddr_bitmap; //虚拟地址用到的位图结构
-  uint32_t vaddr_start;       //虚拟地址起始地址
+  struct bitmap vaddr_bitmap; // 虚拟地址用到的位图结构
+  uint32_t vaddr_start;       // 虚拟地址起始地址
 };
 
 // 内存池标记，用于判断用哪个内存池（内核/用户）
@@ -27,5 +28,19 @@ void *get_user_pages(uint32_t pg_cnt);
 void *get_a_page(enum pool_flags pf, uint32_t vaddr);
 void mem_init();
 uint32_t addr_v2p(uint32_t vaddr);
+
+// 内存块
+struct mem_block {
+  struct list_elem free_elem;
+};
+
+// 内存块描述符
+struct mem_block_desc {
+  uint32_t block_size;      // 内存块大小
+  uint32_t block_per_arena; // 本arena中可容纳此mem_block数
+  struct list free_list;    // 目前可用的mem_block链表
+};
+
+#define DESC_CNT 7 // mem_block_desc个数
 
 #endif /* KERNEL_MEMORY */
