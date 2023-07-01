@@ -77,9 +77,12 @@ struct task_struct {
   struct list_elem general_tag;  // 一般list队列中的结点
   struct list_elem all_list_tag; // thread_all_list中的结点
 
-  uint32_t *pgdir;                    // 进程页目录表的虚拟地址
-  struct virtual_addr userprog_vaddr; // 用户进程的虚拟地址
-  uint32_t stack_magic;               // 栈的边界标记，检测栈的溢出
+  uint32_t *pgdir; // 进程页目录表的虚拟地址(execute为用户进程分配页表时创建)
+
+  struct virtual_addr userprog_vaddr;           // 用户进程的虚拟地址
+  struct mem_block_desc u_block_desc[DESC_CNT]; // 用户进程内存块描述符
+
+  uint32_t stack_magic; // 栈的边界标记，检测栈的溢出
 };
 
 extern struct list thread_ready_list;

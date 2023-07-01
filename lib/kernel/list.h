@@ -4,7 +4,7 @@
 
 // 获取pcb基址
 #define offset(struct_type, member) (int)(&((struct_type *)0)->member)
-// elem_ptr指针转为struct_type类型指针（将tag转换为pcb）
+// 指针类型转换函数（elem_ptr指针-> struct_type类型指针
 #define elem2entry(struct_type, struct_member_name, elem_ptr)                  \
   (struct_type *)((int)elem_ptr - offset(struct_type, struct_member_name))
 

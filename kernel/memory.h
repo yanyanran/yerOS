@@ -43,4 +43,7 @@ struct mem_block_desc {
 
 #define DESC_CNT 7 // mem_block_desc个数
 
+void block_desc_init(struct mem_block_desc *desc_array);
+void *sys_malloc(uint32_t size);
+
 #endif /* KERNEL_MEMORY */
