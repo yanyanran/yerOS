@@ -45,5 +45,6 @@ struct mem_block_desc {
 
 void block_desc_init(struct mem_block_desc *desc_array);
 void *sys_malloc(uint32_t size);
+void sys_free(void *ptr);
 
 #endif /* KERNEL_MEMORY */
