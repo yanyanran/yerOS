@@ -52,9 +52,8 @@ static void pic_init() {
   outb(PIC_S_DATA, 0x02); // ICW3: 设置从片连接到主片的IR2引脚
   outb(PIC_S_DATA, 0x01);
 
-  // 打开键盘、时钟中断
-  outb(PIC_M_DATA, 0xfc);
-  outb(PIC_S_DATA, 0xff);
+  outb(PIC_M_DATA, 0xf8); // 主片 打开IRQ0时钟中断、IRQ1键盘中断和级联从片的IRQ2
+  outb(PIC_S_DATA, 0xbf); // 从片 打开IRQ14接收硬盘控制器中断
 
   put_str("   pic_init done\n");
 }

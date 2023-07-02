@@ -35,7 +35,9 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o syscall.o lib/user/syscall.c
 	gcc ${include} ${GCC_FLAGS} -o syscall_init.o userprog/syscall_init.c
 	gcc ${include} ${GCC_FLAGS} -o stdio.o lib/stdio.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o stdio.o
+	gcc ${include} ${GCC_FLAGS} -o stdio_kernel.o lib/kernel/stdio_kernel.c
+	gcc ${include} ${GCC_FLAGS} -o ide.o device/ide.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o stdio.o stdio_kernel.o ide.o
 	
 	dd if=/dev/zero of=boot.img count=61440 bs=512
 	#dd if=/dev/zero of=hd80M.img bs=1M count=80
