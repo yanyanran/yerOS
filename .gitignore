@@ -1,7 +1,6 @@
 *.bin
 *.o
 *.out
-*.img
 *.vscode
 *.json
 *.cache

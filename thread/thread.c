@@ -119,7 +119,6 @@ void schedule() {
     cur->ticks = cur->priority;
     cur->status = TASK_READY;
   } else {
-    // TODO：阻塞情况-> 加入阻塞队列
   }
 
   ASSERT(!list_empty(&thread_ready_list));
