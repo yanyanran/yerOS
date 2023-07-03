@@ -18,6 +18,7 @@ struct list thread_ready_list;
 struct list thread_all_list;
 static struct list_elem *thread_tag; // 保存队列中的线程结点
 struct lock pid_lock;                // 分配pid锁
+struct task_struct *idle_thread;     // idle线程
 
 // 保存cur线程的寄存器映像，将下个线程next的寄存器映像装载到处理器
 extern void switch_to(struct task_struct *cur, struct task_struct *next);
@@ -28,6 +29,14 @@ struct task_struct *running_thread() {
   asm("mov %%esp, %0" : "=g"(esp));
   return (struct task_struct *)(esp &
                                 0xfffff000); // 取esp整数部分，即pcb起始地址
+}
+
+// 系统空闲时运行的线程
+static void idle(void *arg UNUSED) {
+  while (1) {
+    thread_block(TASK_BLOCKED); // 阻塞自己
+    asm volatile("sti; hlt" ::: "memory");
+  }
 }
 
 // 分配pid
@@ -121,7 +130,10 @@ void schedule() {
   } else {
   }
 
-  ASSERT(!list_empty(&thread_ready_list));
+  // 就绪队列中没有可运行任务-> 唤醒idle
+  if (list_empty(&thread_ready_list)) {
+    thread_unblock(idle_thread);
+  }
   thread_tag = NULL;
   thread_tag =
       list_pop(&thread_ready_list); // 弹出就绪队列中的下一个处理线程结点（tag）
@@ -136,14 +148,15 @@ void schedule() {
   switch_to(cur, next); // 任务切换
 }
 
-// 初始化线程环境
-void thread_init(void) {
-  put_str("thread_init start\n");
-  list_init(&thread_ready_list);
-  list_init(&thread_all_list);
-  lock_init(&pid_lock);
-  make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
-  put_str("thread_init done\n");
+// 主动让出cpu，换其他线程运行
+void thread_yield(void) {
+  struct task_struct *cur = running_thread();
+  enum intr_status old_status = intr_disable();
+  ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+  list_append(&thread_ready_list, &cur->general_tag);
+  cur->status = TASK_READY; // 与thread_block区别
+  schedule();
+  intr_set_status(old_status);
 }
 
 // 线程自愿阻塞，标志状态为stat
@@ -174,4 +187,17 @@ void thread_unblock(struct task_struct *pthread) {
     pthread->status = TASK_READY;
   }
   intr_set_status(old_status);
+}
+
+// 初始化线程环境
+void thread_init(void) {
+  put_str("thread_init start\n");
+
+  list_init(&thread_ready_list);
+  list_init(&thread_all_list);
+  lock_init(&pid_lock);
+
+  make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
+  idle_thread = thread_start("idle", 10, idle, NULL); // 创建 qidle线程
+  put_str("thread_init done\n");
 }

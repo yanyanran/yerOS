@@ -6,6 +6,8 @@
 
 typedef enum { false, true } bool;
 
+#define UNUSED __attribute__((unused))
+
 /*------------------GDT描述符属性------------------*/
 #define DESC_G_4K 1
 #define DESC_D_32 1

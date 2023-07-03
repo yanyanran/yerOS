@@ -38,7 +38,6 @@
 uint8_t channel_cnt;            // 通道数
 struct ide_channel channels[2]; // 有两个ide通道
 
-// 硬盘初始化
 void ide_init() {
   printk("ide_init start\n");
   uint8_t hd_cnt = *((uint8_t *)(0x475)); // 获取硬盘数
@@ -47,7 +46,6 @@ void ide_init() {
   struct ide_channel *channel;
   uint8_t channel_no = 0;
 
-  /* 处理每个通道上的硬盘 */
   while (channel_no < channel_cnt) {
     channel = &channels[channel_no];
     sprintf(channel->name, "ide%d", channel_no);
@@ -55,12 +53,12 @@ void ide_init() {
     /* 为每个ide通道初始化端口基址及中断向量 */
     switch (channel_no) {
     case 0:
-      channel->port_base = 0x1f0; // ide0通道的起始端口号是0x1f0
+      channel->port_base = 0x1f0;
       // 从片8259A上倒二的中断引脚（响应ide0通道上的硬盘中断
       channel->irq_no = 0x20 + 14;
       break;
     case 1:
-      channel->port_base = 0x170; // ide1通道的起始端口号是0x170
+      channel->port_base = 0x170;
       // 从片8259A上的最后一个中断引脚（响应ide1通道上的硬盘中断
       channel->irq_no = 0x20 + 15;
       break;
