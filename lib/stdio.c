@@ -5,12 +5,12 @@
 #include "syscall.h"
 
 // 整型int转字符ASCII（base：转换的进制
-static void iota(uint32_t value, char **buf_ptr_addr, uint8_t base) {
+static void itoa(uint32_t value, char **buf_ptr_addr, uint8_t base) {
   uint32_t m = value % base; // 求模（最先掉低位但最后写入缓冲区
   uint32_t i = value / base; // 取整
 
   if (i) {
-    iota(i, buf_ptr_addr, base);
+    itoa(i, buf_ptr_addr, base);
   }
   if (m < 10) {
     //将数字 0～9 转换为字符'0'～'9'
@@ -27,21 +27,43 @@ uint32_t vsprintf(char *str, const char *format, va_list ap) {
   const char *index_ptr = format;
   char index_char = *index_ptr; // 指向format中的每个字符
   int32_t arg_int;
+  char *arg_str;
 
   while (index_char) {
     if (index_char != '%') {
-      *(buf_ptr)++ = index_char;
+      *(buf_ptr++) = index_char;
       index_char = *(++index_ptr);
       continue;
     }
-    index_char = *(++index_ptr); // 得到%后面的字符
-
+    index_char = *(++index_ptr);  // 得到%后面的字符
     switch (index_char) {
-    case 'x':
-      arg_int = va_arg(ap, int);
-      iota(arg_int, &buf_ptr, 16);
-      index_char = *(++index_ptr); // 跳过格式字符并更新index_char
-      break;
+      case 's':
+        arg_str = va_arg(ap, char*);
+        strcpy(buf_ptr, arg_str);
+        buf_ptr += strlen(arg_str);
+        index_char = *(++index_ptr);
+        break;
+
+      case 'c':
+        *(buf_ptr++) = va_arg(ap, char);
+        index_char = *(++index_ptr);
+        break;
+
+      case 'd':
+        arg_int = va_arg(ap, int);
+        if (arg_int < 0) {
+          arg_int = 0 - arg_int;
+          *buf_ptr++ = '-';
+        }
+        itoa(arg_int, &buf_ptr, 10);
+        index_char = *(++index_ptr);
+        break;
+
+      case 'x':
+        arg_int = va_arg(ap, int);
+        itoa(arg_int, &buf_ptr, 16);
+        index_char = *(++index_ptr);// 跳过格式字符并更新index_char
+        break;
     }
   }
 
@@ -49,7 +71,7 @@ uint32_t vsprintf(char *str, const char *format, va_list ap) {
 }
 
 // sprintf
-uint32_t sprintf(char* buf, const char* format, ...) {
+uint32_t sprintf(char *buf, const char *format, ...) {
   va_list args;
   uint32_t retval;
   va_start(args, format);

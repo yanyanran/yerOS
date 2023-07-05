@@ -1,7 +1,8 @@
 #include "list.h"
 #include "global.h"
 #include "interrupt.h"
-#include <stdint.h>
+#include "stdint.h"
+#include "stdio_kernel.h"
 
 void list_init(struct list *list) {
   list->head.prev = NULL;
@@ -62,6 +63,7 @@ struct list_elem *list_traversal(struct list *plist, func f, int arg) {
     return NULL;
   }
   while (elem != &plist->tail) {
+    //printk("%x \n", elem);
     if (f(elem, arg)) {
       return elem;
     }

@@ -263,10 +263,10 @@ static void identify_disk(struct disk *hd) {
   char buf[64]; // 缓冲区，存储转换后的结果
   uint8_t sn_start = 10 * 2, sn_len = 20, md_start = 27 * 2, md_len = 40;
   swap_pairs_bytes(&id_info[sn_start], buf, sn_len);
-  printk("  disk %s info:\n     SN: %s\n", hd->name, buf);
+  printk("  disk %s info:\n    SN: %s\n", hd->name, buf);
   memset(buf, 0, sizeof(buf));
   swap_pairs_bytes(&id_info[md_start], buf, md_len);
-  printk("MODULE: %s\n", buf);
+  printk("    MODULE: %s\n", buf);
   uint32_t sectors = *(uint32_t *)&id_info[60 * 2];
   printk("    SECTORS: %d\n", sectors);
   printk("    CAPACITY: %dMB\n", sectors * 512 / 1024 / 1024);
@@ -317,7 +317,7 @@ static void partition_scan(struct disk *hd, uint32_t ext_lba) {
 // 打印分区信息
 static bool partition_info(struct list_elem *pelem, int arg UNUSED) {
   struct partition *part = elem2entry(struct partition, part_tag, pelem);
-  printk("%s start_lba:0x%x, sec_cnt:0x%x\n", part->name, part->start_lba,
+  printk("  %s start_lba:0x%x, sec_cnt:0x%x\n", part->name, part->start_lba,
          part->sec_cnt);
   return false; // return与函数本身功能无关，只为了让主调函数list_traversal继续向下遍历元素
 }
@@ -326,6 +326,7 @@ void ide_init() {
   printk("ide_init start\n");
   uint8_t hd_cnt = *((uint8_t *)(0x475)); // 获取硬盘数
   ASSERT(hd_cnt > 0);
+  //list_init(&partition_list);
   channel_cnt = DIV_ROUND_UP(hd_cnt, 2); // 根据硬盘数反推ide通道数
   struct ide_channel *channel;
   uint8_t channel_no = 0, dev_no = 0;
@@ -353,22 +354,24 @@ void ide_init() {
     直到硬盘完成后通过发中断，由中断处理程序将此信号量sema_up，唤醒线程 */
     sema_init(&channel->disk_done, 0);
     register_handler(channel->irq_no, intr_hd_handler);
+
+    // 分别获取俩硬盘的参数和分区信息
+    while (dev_no < 2) {
+      struct disk *hd = &channel->devices[dev_no];
+      hd->my_channel = channel;
+      hd->dev_no = dev_no;
+      sprintf(hd->name, "sd%c", 'a' + channel_no * 2 + dev_no);
+      identify_disk(hd); // 获取硬盘参数
+      if (dev_no != 0) { // 内核本身的裸硬盘（hd60M.img）不处理
+        partition_scan(hd, 0); // 扫描该硬盘上的分区
+      }
+      p_no = 0, l_no = 0; // 将硬盘驱动器号置0，为下个channel的两个硬盘初始化
+      dev_no++;
+    }
+    dev_no = 0; // 将硬盘驱动器号置0，为下个channel的两个硬盘初始化
     channel_no++; // 下个channel
   }
 
-  // 分别获取俩硬盘的参数和分区信息
-  while (dev_no < 2) {
-    struct disk *hd = &channel->devices[dev_no];
-    hd->my_channel = channel;
-    hd->dev_no = dev_no;
-    sprintf(hd->name, "sd%c", 'a' + channel_no * 2 + dev_no);
-    identify_disk(hd);       // 获取硬盘参数
-    if (dev_no != 0) {       // 内核本身的裸硬盘（hd60M.img）不处理
-      partition_scan(hd, 0); // 扫描该硬盘上的分区
-    }
-    p_no = 0, l_no = 0; // 将硬盘驱动器号置0，为下个channel的两个硬盘初始化
-    channel_no++;
-  }
   printk("\n  all partition info\n");
   list_traversal(&partition_list, partition_info, (int)NULL);
   printk("ide_init done\n");
