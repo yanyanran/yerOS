@@ -1,4 +1,5 @@
 #include "console.h"
+#include "fs.h"
 #include "ide.h"
 #include "interrupt.h"
 #include "keyboard.h"
@@ -21,4 +22,5 @@ void init_all() {
   tss_init();      // 初始化任务状态表
   syscall_init();  // 初始化系统调用
   ide_init();      // 初始化硬盘驱动
+  filesys_init();
 }
