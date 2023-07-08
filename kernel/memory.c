@@ -78,7 +78,7 @@ static struct arena *block2arena(struct mem_block *b) {
 
 // --------------------------------------------------------------------------------------------
 
-// 在虚拟内存池（pf指定类型）中申请pg_cnt个虚拟页
+// 在虚拟内存池（pf指定类型）中申请pg_cnt个虚拟页p *(struct arena*)0xc0101000
 static void *vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
   int vaddr_start = 0, bit_idx_start = -1;
   uint32_t cnt = 0;
@@ -269,7 +269,7 @@ void *sys_malloc(uint32_t size) {
       a->cnt = page_cnt;
       a->large = true;
       lock_release(&mem_pool->lock);
-      return (void *)a++; // 跨过arena大小把剩下内存返回
+      return (void *)++a; // 跨过arena大小把剩下内存返回
     } else {
       lock_release(&mem_pool->lock);
       return NULL;

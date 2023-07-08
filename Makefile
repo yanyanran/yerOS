@@ -6,7 +6,14 @@ kernelBin = kernel.bin
 printS = lib/kernel/print.asm 
 kernelS = kernel/kernel.asm
 include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/ -I lib/user -I fs/
-GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector
+GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector -g
+
+
+
+# BOCHS相关参数
+BOCHS_PATH=/home/happy/Documents/bochs/bin/bochs
+BOCHS_PORT="target remote 127.0.0.1:1234"
+BOCHS_GDB_FLAG='gdbstub:enabled=1,port=1234,text_base=0,data_base=0,bss_base=0'
 
 build:
 	nasm -I include/ -o ${mbrBin} ${mbrS} 
@@ -46,8 +53,16 @@ image: build
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
 run: image
-	#sh fdisk.sh
-	bochs -f bochsrc.disk
+	sh fdisk.sh
+	${BOCHS_PATH} -f bochsrc.disk
 
+
+run_gdb: image
+	#sh fdisk.sh
+	bochs -qf bochsrc.disk  ${BOCHS_GDB_FLAG} & 
+	gdb ./kernel.bin -ex ${BOCHS_PORT}
+	pkill bochs
+	make  clear
 clear:
-	rm -rf *.bin *.out *.lock *.o *.img
+	rm -rf *.bin *.out *.lock *.o 
+	#*.img
