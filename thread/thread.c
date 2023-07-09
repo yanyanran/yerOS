@@ -90,6 +90,14 @@ void init_thread(struct task_struct *pthread, char *name, int prio) {
   pthread->ticks = prio;
   pthread->elapsed_ticks = 0;
   pthread->pgdir = NULL;
+  pthread->fd_table[0] = 0; // 标准输入
+  pthread->fd_table[1] = 1; // 标准输出
+  pthread->fd_table[2] = 2; // 标准错误
+  uint8_t fd_idx = 3;
+  while (fd_idx < MAX_FILES_OPEN_PER_PROC) { // 其余全部置-1
+    pthread->fd_table[fd_idx] = -1;
+    fd_idx++;
+  }
   pthread->stack_magic = 0x20021112; // 自定义魔数
 }
 

@@ -5,6 +5,8 @@
 #include "memory.h"
 #include "stdint.h"
 
+#define MAX_FILES_OPEN_PER_PROC 8 // 每个任务可以打开的文件数
+
 // 自定义通用函数类型，它将在很多线程函数中作为形参类型
 typedef void thread_func(void *);
 typedef int16_t pid_t;
@@ -80,7 +82,9 @@ struct task_struct {
   uint32_t *pgdir; // 进程页目录表的虚拟地址(execute为用户进程分配页表时创建)
 
   struct virtual_addr userprog_vaddr;           // 用户进程的虚拟地址
-  struct mem_block_desc u_block_desc[DESC_CNT]; // 用户进程内存块描述符
+  struct mem_block_desc u_block_desc[DESC_CNT]; // 用户进程内存块描述符数组
+
+  int32_t fd_table[MAX_FILES_OPEN_PER_PROC]; // 文件描述符数组
 
   uint32_t stack_magic; // 栈的边界标记，检测栈的溢出
 };
