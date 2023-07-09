@@ -4,12 +4,64 @@
 #include "global.h"
 #include "ide.h"
 #include "inode.h"
+#include "list.h"
 #include "memory.h"
 #include "print.h"
 #include "stdint.h"
 #include "stdio_kernel.h"
 #include "string.h"
 #include "super_block.h"
+
+struct partition *cur_part; // 默认情况下操作的是哪个分区
+
+// 在分区链表中找到名为part_name的分区，并将其指针赋值给cur_part
+static bool mount_partition(struct list_elem *pelem, int arg) {
+  char *part_name = (char *)arg;
+  struct partition *part = elem2entry(struct partition, part_tag, pelem);
+
+  if (!strcmp(part->name, part_name)) {
+    cur_part = part;
+    struct disk *hd = cur_part->my_disk;
+    struct super_block *sb_buf = (struct super_block *)sys_malloc(SECTOR_SIZE);
+
+    // 在内存中创建cur_part分区的超级块
+    cur_part->sb = (struct super_block *)sys_malloc(sizeof(struct super_block));
+    if (cur_part->sb == NULL) {
+      PANIC("alloc memory failed!");
+    }
+    memset(sb_buf, 0, SECTOR_SIZE);
+    ide_read(hd, cur_part->start_lba + 1, sb_buf, 1); // 读超级块到sb_buf
+    memcpy(cur_part->sb, sb_buf,
+           sizeof(struct super_block)); // 复制到分区超级块sb中
+
+    // 把磁盘上的块位图读入内存
+    cur_part->block_bitmap.bits =
+        (uint8_t *)sys_malloc(sb_buf->block_bitmap_sects * SECTOR_SIZE);
+    if (cur_part->block_bitmap.bits == NULL) {
+      PANIC("alloc memeory failed!");
+    }
+    cur_part->block_bitmap.btmp_bytes_len =
+        sb_buf->block_bitmap_sects * SECTOR_SIZE;
+    ide_read(hd, sb_buf->block_bitmap_lba, cur_part->block_bitmap.bits,
+             sb_buf->block_bitmap_sects);
+
+    // 将磁盘上的inode位图读入到内存
+    cur_part->inode_bitmap.bits =
+        (uint8_t *)sys_malloc(sb_buf->inode_bitmap_sects * SECTOR_SIZE);
+    if (cur_part->inode_bitmap.bits == NULL) {
+      PANIC("alloc memory failed!");
+    }
+    cur_part->inode_bitmap.btmp_bytes_len =
+        sb_buf->inode_bitmap_sects * SECTOR_SIZE;
+    ide_read(hd, sb_buf->inode_bitmap_lba, cur_part->inode_bitmap.bits,
+             sb_buf->inode_bitmap_sects);
+
+    list_init(&cur_part->open_inodes);
+    printk("mount %s done!\n", part->name);
+    return true; // 停止遍历
+  }
+  return false; // 继续遍历
+}
 
 // 初始化分区元信息（一个块大小是一扇区
 static void partition_format(struct disk *hd, struct partition *part) {
@@ -168,4 +220,7 @@ void filesys_init() {
     channel_no++; // 下一通道
   }
   sys_free(sb_buf);
+  char default_part[8] = "sdb1"; // 默认操作分区
+  list_traversal(&partition_list, mount_partition,
+                 (int)default_part); // 挂载分区
 }

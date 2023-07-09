@@ -41,6 +41,7 @@ struct ide_channel {
 
 extern uint8_t channel_cnt;            // 通道数
 extern struct ide_channel channels[2]; // 有两个ide通道
+extern struct list partition_list;     // 分区列表
 
 void ide_init();
 void ide_write(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt);
