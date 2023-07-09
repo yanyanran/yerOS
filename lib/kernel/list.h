@@ -2,9 +2,8 @@
 #define LIB_KERNEL_LIST
 #include "global.h"
 
-// 获取pcb基址
+// 用偏移量获取成员所在结构体基址
 #define offset(struct_type, member) (int)(&((struct_type *)0)->member)
-// 指针类型转换函数（elem_ptr指针-> struct_type类型指针
 #define elem2entry(struct_type, struct_member_name, elem_ptr)                  \
   (struct_type *)((int)elem_ptr - offset(struct_type, struct_member_name))
 

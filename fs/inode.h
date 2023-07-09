@@ -18,4 +18,6 @@ struct inode {
   struct list_elem inode_tag; // 已打开的inode列表（避免多次读硬盘
 };
 
+void inode_init(uint32_t inode_no, struct inode *new_inode);
+
 #endif /* FS_INODE */
