@@ -177,7 +177,7 @@ static void partition_format(struct disk *hd, struct partition *part) {
   sys_free(buf); // 释放缓冲区
 }
 
-// 将最上层路径名解析出来
+// 将最上层路径名解析出来（类似pop
 static char *path_parse(char *pathname, char *name_store) {
   if (pathname[0] == '/') { // 跳过'/'
     while (*(++pathname) == '/') {
@@ -211,6 +211,70 @@ int32_t path_depth_cnt(char *pathname) {
     }
   }
   return depth;
+}
+
+// 搜索文件,找到返回inode号,保证父目录打开
+static int search_file(const char *pathname,
+                       struct path_search_record *searched_record) {
+  // 待查找的是根目录
+  if (!strcmp(pathname, "/") || !strcmp(pathname, "/.") ||
+      !strcmp(pathname, "/..")) {
+    searched_record->parent_dir = &root_dir;
+    searched_record->file_type = FT_DIRECTORY;
+    searched_record->searched_path[0] = 0; // 搜索路径置空
+    return 0;
+  }
+
+  uint32_t path_len = strlen(pathname);
+  ASSERT(pathname[0] == '/' && path_len > 1 && path_len < MAX_PATH_LEN);
+  char *sub_path = (char *)pathname;
+  struct dir *parent_dir = &root_dir;
+  struct dir_entry dir_e;
+  char name[MAX_FILE_NAME_LEN] = {0}; // 记录路径解析出来的各级名称
+
+  searched_record->parent_dir = parent_dir;
+  searched_record->file_type = FT_UNKNOWN;
+  uint32_t parent_inode_no = 0;
+  /*
+   * input->/a/b/c  output->  [name]a; [sub_path]/b/c
+   */
+  sub_path = path_parse(sub_path, name);
+
+  while (name[0]) {
+    ASSERT(strlen(searched_record->searched_path) < 512);
+
+    // 记录已存在的父目录
+    strcat(searched_record->searched_path, "/");
+    strcat(searched_record->searched_path, name);
+
+    // 在所给目录中查找文件
+    if (search_dir_entry(cur_part, parent_dir, name, &dir_e)) {
+      memset(name, 0, MAX_FILE_NAME_LEN);
+      if (sub_path) { // sub_path不为空，未结束，继续拆分
+        sub_path = path_parse(sub_path, name);
+      }
+
+      if (FT_DIRECTORY == dir_e.f_type) { // 目录
+        parent_inode_no = parent_dir->inode->i_no;
+        dir_close(parent_dir);
+        parent_dir = dir_open(cur_part, dir_e.i_no); // 更新父目录
+        searched_record->parent_dir = parent_dir;
+        continue;
+      } else if (FT_REGULAR == dir_e.f_type) { // 普通文件
+        searched_record->file_type = FT_REGULAR;
+        return dir_e.i_no;
+      }
+    } else { // 找不到目录项也要留着parent_dir不要关闭，创建新文件需要在parent_dir中创
+      return -1;
+    }
+  }
+
+  // 执行到此，必然是遍历了完整路径，且查找的文件/目录存在
+  dir_close(searched_record->parent_dir);
+  // 保存被查找目录的直接父目录
+  searched_record->parent_dir = dir_open(cur_part, parent_inode_no);
+  searched_record->file_type = FT_DIRECTORY;
+  return dir_e.i_no;
 }
 
 // 在磁盘上搜索文件系统，若没有则格式化分区创建文件系统
