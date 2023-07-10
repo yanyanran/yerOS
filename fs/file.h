@@ -23,4 +23,10 @@ enum bitmap_type {
 
 #define MAX_FILE_OPEN 32 // 系统可打开的最大文件数
 
+int32_t get_free_slot_in_global(void);
+int32_t pcb_fd_install(int32_t global_fd_idx);
+int32_t block_bitmap_malloc(struct partition *part);
+int32_t inode_bitmap_malloc(struct partition *part);
+void bitmap_sync(struct partition *part, uint32_t bit_idx, uint8_t btmp);
+
 #endif /* FS_FILE */

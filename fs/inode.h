@@ -2,6 +2,7 @@
 #define FS_INODE
 
 #include "global.h"
+#include "ide.h"
 #include "list.h"
 #include "stdint.h"
 
@@ -19,5 +20,7 @@ struct inode {
 };
 
 void inode_init(uint32_t inode_no, struct inode *new_inode);
+struct inode *inode_open(struct partition *part, uint32_t inode_no);
+void inode_close(struct inode *inode);
 
 #endif /* FS_INODE */

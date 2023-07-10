@@ -12,7 +12,7 @@ struct dir {
   uint8_t dir_buf[512]; // 目录的数据缓存
 };
 
-// 目录项
+// 目录项12字节
 struct dir_entry {
   char filename[MAX_FILE_NAME_LEN]; // 普通文件/目录名
   uint32_t i_no;                    // 普通文件/目录对应的inode号
