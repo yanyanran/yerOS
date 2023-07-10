@@ -200,6 +200,9 @@ bool sync_dir_entry(struct dir *parent_dir, struct dir_entry *p_de,
       dir_entry_idx++;
     }
     block_idx++;
+    if (block_idx > 12) {
+      ide_read(cur_part->my_disk, all_blocks[12], all_blocks + 12, 1);
+    }
   }
   printk("directory is full!\n");
   return false;
