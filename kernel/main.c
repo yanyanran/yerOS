@@ -21,7 +21,7 @@ int prog_b_pid = 0;
 int main(void) {
   put_str("I am kernel\n");
   init_all();
-  intr_enable(); // 开中断
+  // intr_enable(); // 开中断
   // console_put_str("main_pid:0x");
   // console_put_int(sys_getpid());
   // console_put_char('\n');
@@ -33,7 +33,12 @@ int main(void) {
   // 内核线程共享内存空间，虚拟地址唯一
   thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
   thread_start("k_thread_b", 31, k_thread_b, "I am thread_b ");
-  sys_open("/file1", O_CREAT);
+
+  uint32_t fd = sys_open("/file1", O_RDONLY);
+  printf("fd:%d\n", fd);
+  sys_close(fd);
+  printf("%d closed now\n", fd);
+
   while (1) {
     // console_put_str("Main ");
   };
