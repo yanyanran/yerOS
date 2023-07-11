@@ -12,7 +12,6 @@
 #include "super_block.h"
 
 struct dir root_dir;        // 根目录
-struct partition *cur_part; // 默认情况下操作的是哪个分区
 
 // 打开根目录
 void open_root_dir(struct partition *part) {

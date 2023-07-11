@@ -1,4 +1,5 @@
 #include "console.h"
+#include "fs.h"
 #include "init.h"
 #include "interrupt.h"
 #include "ioqueue.h"
@@ -26,13 +27,13 @@ int main(void) {
   // console_put_char('\n');
 
   // 用户进程独享内存空间，虚拟地址相同不冲突
-  // process_execute(u_prog_a, "user_prog_a");
-  // process_execute(u_prog_b, "user_prog_b");
+  process_execute(u_prog_a, "user_prog_a");
+  process_execute(u_prog_b, "user_prog_b");
 
   // 内核线程共享内存空间，虚拟地址唯一
-  // thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
-  // thread_start("k_thread_b", 31, k_thread_b, "I am thread_b ");
-
+  thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
+  thread_start("k_thread_b", 31, k_thread_b, "I am thread_b ");
+  sys_open("/file1", O_CREAT);
   while (1) {
     // console_put_str("Main ");
   };
