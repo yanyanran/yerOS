@@ -34,5 +34,6 @@ struct path_search_record {
 void filesys_init();
 int32_t sys_open(const char *pathname, uint8_t flags);
 int32_t sys_close(int32_t fd);
+uint32_t sys_write(int32_t fd, const void* buf, uint32_t count);
 
 #endif /* FS_FS */
