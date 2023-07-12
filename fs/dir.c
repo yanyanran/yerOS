@@ -11,7 +11,7 @@
 #include "string.h"
 #include "super_block.h"
 
-struct dir root_dir;        // 根目录
+struct dir root_dir; // 根目录
 
 // 打开根目录
 void open_root_dir(struct partition *part) {
@@ -204,5 +204,113 @@ bool sync_dir_entry(struct dir *parent_dir, struct dir_entry *p_de,
     }
   }
   printk("directory is full!\n");
+  return false;
+}
+
+// 把分区part目录pdir中编号为inode_no的目录项删除
+bool delete_dir_entry(struct partition *part, struct dir *pdir,
+                      uint32_t inode_no, void *io_buf) {
+  struct inode *dir_inode = pdir->inode;
+  uint32_t block_idx = 0, all_blocks[140] = {0};
+
+  while (block_idx < 12) {
+    all_blocks[block_idx] = dir_inode->i_sectors[block_idx];
+    block_idx++;
+  }
+  if (dir_inode->i_sectors[12]) {
+    ide_read(part->my_disk, dir_inode->i_sectors[12], all_blocks + 12, 1);
+  }
+
+  uint32_t dir_entry_size = part->sb->dir_entry_size;
+  uint32_t dir_entry_per_sec =
+      (SECTOR_SIZE / dir_entry_size); // 每扇区最大的目录项数目
+  struct dir_entry *dir_e = (struct dir_entry *)io_buf;
+  struct dir_entry *dir_entry_found = NULL;
+  uint8_t dir_entry_idx, dir_entry_cnt; // 此扇区内目录项总数
+  bool is_dir_first_block = false; // 当前待删除的块是否是目录第一个块“.”
+
+  // 遍历所有块寻找目录项
+  block_idx = 0;
+  while (block_idx < 140) {
+    is_dir_first_block = false;
+    if (all_blocks[block_idx] == 0) {
+      block_idx++;
+      continue;
+    }
+    dir_entry_idx = dir_entry_cnt = 0;
+    memset(io_buf, 0, SECTOR_SIZE);
+    // 读扇区获取目录项
+    ide_read(part->my_disk, all_blocks[block_idx], io_buf, 1);
+
+    /* 遍历所有的目录项，统计该扇区的目录项数量及是否有待删除的目录项 */
+    while (dir_entry_idx < dir_entry_per_sec) {
+      if ((dir_e + dir_entry_idx)->f_type != FT_UNKNOWN) { // 该目录项有意义
+        if (!strcmp((dir_e + dir_entry_idx)->filename, ".")) {
+          is_dir_first_block = true;
+        } else if (strcmp((dir_e + dir_entry_idx)->filename, ".") &&
+                   strcmp((dir_e + dir_entry_idx)->filename, "..")) {
+          dir_entry_cnt++; // 用来判断删除目录项后是否回收该扇区
+          if ((dir_e + dir_entry_idx)->i_no == inode_no) { // 找到此inode
+            ASSERT(dir_entry_found == NULL);
+            // 将其记录在dir_entry_found
+            dir_entry_found = dir_e + dir_entry_idx;
+            /* 找到后也继续遍历，统计总目录项数 */
+          }
+        }
+      }
+      dir_entry_idx++;
+    }
+    /* 此扇区未找到该目录项，继续在下个扇区找 */
+    if (dir_entry_found == NULL) {
+      block_idx++;
+      continue;
+    }
+    /* 找到目录项 */
+    ASSERT(dir_entry_cnt >= 1);
+    // 除目录第1个扇区外，该扇区只有目录项自己-> 将整个扇区回收
+    if (dir_entry_cnt == 1 && !is_dir_first_block) {
+      // 1、从块位图中回收该块
+      uint32_t block_bitmap_idx =
+          all_blocks[block_idx] - part->sb->data_start_lba;
+      bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
+      bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
+      // 2、将块地址从数组i_sectors或索引表中去掉
+      if (block_idx < 12) {
+        dir_inode->i_sectors[block_idx] = 0;
+      } else { /* 先判断一级间接索引表的间接块数，如果仅有这个间接块，连同间接索引表块一同回收*/
+        uint32_t indirect_blocks = 0;
+        uint32_t indirect_block_idx = 12;
+        while (indirect_block_idx < 140) {
+          if (all_blocks[indirect_block_idx] != 0) {
+            indirect_blocks++;
+          }
+        }
+        ASSERT(indirect_blocks >= 1);
+        if (indirect_blocks > 1) { // 间接索引表中还有其他间接块
+          all_blocks[block_idx] = 0;
+          ide_write(part->my_disk, dir_inode->i_sectors[12], all_blocks + 12,
+                    1);
+        } else {
+          /* 回收间接索引表所在的块 */
+          block_bitmap_idx =
+              dir_inode->i_sectors[12] - part->sb->data_start_lba;
+          bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
+          bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
+          dir_inode->i_sectors[12] = 0; // 将间接索引表地址清0
+        }
+      }
+    } else { // 仅将该目录项清空
+      memset(dir_entry_found, 0, dir_entry_size);
+      ide_write(part->my_disk, all_blocks[block_idx], io_buf, 1);
+    }
+
+    // 更新inode信息并同步到磁盘
+    ASSERT(dir_inode->i_size >= dir_entry_size);
+    dir_inode->i_size -= dir_entry_size;
+    memset(io_buf, 0, SECTOR_SIZE * 2);
+    inode_sync(part, dir_inode, io_buf);
+    return true;
+  }
+  // 所有块中未找到则返回false（这种情况该是serarch_file出错了
   return false;
 }

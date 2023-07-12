@@ -14,7 +14,7 @@
 #include "super_block.h"
 #include "thread.h"
 
-struct file file_table[MAX_FILE_OPEN]; // 文件表
+struct file file_table[MAX_FILE_OPEN]; // 文件表（文件处于打开状态
 
 // 从文件表中获取一个空闲位
 int32_t get_free_slot_in_global(void) {
