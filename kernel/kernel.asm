@@ -122,7 +122,7 @@ syscall_handler:
 ;2、为系统调用子功能传入参数(3-1)
     push edx
     push ecx
-    push edx
+    push ebx
 
 ;3、调用子功能处理函数
     call [syscall_table + eax*4]
