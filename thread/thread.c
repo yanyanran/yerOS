@@ -22,6 +22,7 @@ struct task_struct *idle_thread;     // idle线程
 
 // 保存cur线程的寄存器映像，将下个线程next的寄存器映像装载到处理器
 extern void switch_to(struct task_struct *cur, struct task_struct *next);
+extern void init(void);
 
 // 获取当前线程的pcb指针
 struct task_struct *running_thread() {
@@ -100,6 +101,7 @@ void init_thread(struct task_struct *pthread, char *name, int prio) {
   }
   pthread->cwd_inode_nr = 0;         // 以根目录为默认工作路径
   pthread->stack_magic = 0x20021112; // 自定义魔数
+  pthread->parent_pid = -1;
 }
 
 // 创建线程，线程执行函数是function(func_arg)
@@ -198,6 +200,9 @@ void thread_unblock(struct task_struct *pthread) {
   intr_set_status(old_status);
 }
 
+// 为fork分配一个pid
+pid_t fork_pid(void) { return allocate_pid(); }
+
 // 初始化线程环境
 void thread_init(void) {
   put_str("thread_init start\n");
@@ -206,7 +211,8 @@ void thread_init(void) {
   list_init(&thread_all_list);
   lock_init(&pid_lock);
 
+  process_execute(init, "init"); // 第一个初始化，这是第一个进程，init进程pid为1
   make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
-  idle_thread = thread_start("idle", 10, idle, NULL); // 创建 qidle线程
+  idle_thread = thread_start("idle", 10, idle, NULL); // 创建idle线程
   put_str("thread_init done\n");
 }

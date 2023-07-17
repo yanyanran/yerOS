@@ -12,6 +12,7 @@
 #include "syscall.h"
 #include "syscall_init.h"
 #include "thread.h"
+#include <stdint.h>
 
 void k_thread_a(void *arg);
 void k_thread_b(void *arg);
@@ -19,6 +20,18 @@ void u_prog_a(void);
 void u_prog_b(void);
 int prog_a_pid = 0;
 int prog_b_pid = 0;
+
+// init进程
+void init(void) {
+  uint32_t ret_pid = fork();
+  if (ret_pid) {
+    printf("i am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
+  } else {
+    printf("i am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
+  }
+  while (1) {
+  }
+}
 
 int main(void) {
   put_str("I am kernel\n");

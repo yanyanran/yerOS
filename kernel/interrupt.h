@@ -17,4 +17,5 @@ enum intr_status intr_disable(void);
 enum intr_status intr_set_status(enum intr_status status);
 enum intr_status intr_get_status(void);
 void register_handler(uint8_t vector_no, intr_handler func);
+enum intr_status intr_get_status();
 #endif /* KERNEL_INTERRUPT */

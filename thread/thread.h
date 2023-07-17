@@ -87,6 +87,7 @@ struct task_struct {
   int32_t fd_table[MAX_FILES_OPEN_PER_PROC]; // 文件描述符数组
 
   uint32_t cwd_inode_nr; // 进程所在工作目录的inode编号
+  int16_t parent_pid;    // 父进程pid
   uint32_t stack_magic;  // 栈的边界标记，检测栈的溢出
 };
 
@@ -104,5 +105,6 @@ void init_thread(struct task_struct *pthread, char *name, int prio);
 void thread_create(struct task_struct *pthread, thread_func func,
                    void *func_arg);
 void thread_yield(void);
+pid_t fork_pid(void);
 
 #endif /* THREAD_THREAD */
