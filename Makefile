@@ -5,7 +5,7 @@ loaderBin = loader.bin
 kernelBin = kernel.bin
 printS = lib/kernel/print.asm 
 kernelS = kernel/kernel.asm
-include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/ -I lib/user -I fs/
+include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/ -I lib/user -I fs/ -I shell/
 GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector -g
 
 
@@ -49,7 +49,8 @@ image: build
 	gcc ${include} ${GCC_FLAGS} -o file.o fs/file.c
 	gcc ${include} ${GCC_FLAGS} -o dir.o fs/dir.c
 	gcc ${include} ${GCC_FLAGS} -o fork.o userprog/fork.c
-	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o stdio.o stdio_kernel.o ide.o fs.o inode.o dir.o file.o fork.o
+	gcc ${include} ${GCC_FLAGS} -o shell.o shell/shell.c
+	ld -m elf_i386 -Ttext 0xc0001500 -e main -o ${kernelBin} main.o init.o interrupt.o print.o kernel.o timer.o debug.o string.o bitmap.o memory.o thread.o list.o switch.o sync.o console.o keyboard.o ioqueue.o tss.o process.o syscall.o syscall_init.o stdio.o stdio_kernel.o ide.o fs.o inode.o dir.o file.o fork.o shell.o
 	
 	dd if=/dev/zero of=boot.img count=61440 bs=512
 	dd if=${mbrBin} of=boot.img count=1 bs=512 conv=notrunc
