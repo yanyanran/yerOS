@@ -218,10 +218,10 @@ cls_screen:
     mov ebx,0
     mov ecx, 80*25
 .cls:
-    mov dword [gs: ebx], 0x0720  ;0x0720-> 黑底白字空格键
+    mov word [gs: ebx], 0x0720  ;0x0720-> 黑底白字空格键
     add ebx, 2
     loop .cls
-    mov bx, 1920    ;将光标值重置为1920，也就是最后一行的首字符
+    mov ebx, 0
 
 ;;;;;;;;; 设置光标为bx值 ;;;;;;;;;
     ;1、先设置高8位

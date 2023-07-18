@@ -26,6 +26,7 @@
 int main(void) {
   put_str("I am kernel\n");
   init_all();
+  intr_enable();
   cls_screen();
   console_put_str("[yers@localhost /]$ ");
   while (1) {

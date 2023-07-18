@@ -109,7 +109,7 @@ static char keymap[][2] = {
 
 // 键盘中断处理程序
 static void intr_keyboard_handler(void) {
-  //bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
+  // bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
   bool shift_down_last = shift_status;
   bool caps_lock_last = caps_lock_status;
   bool break_code;
@@ -169,7 +169,6 @@ static void intr_keyboard_handler(void) {
     if (cur_char) { // 只处理ASCII码不为0的键
       // 若缓冲区未满且待加入的cur_char不为0，则将其加入到缓冲区中
       if (!ioq_full(&kbd_buf)) {
-        put_char(cur_char); // 临时的
         ioq_putchar(&kbd_buf, cur_char);
       }
       return;
