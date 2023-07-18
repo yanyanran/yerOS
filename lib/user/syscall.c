@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "exec.h"
 #include "fs.h"
 #include "stdint.h"
 #include "thread.h"
@@ -112,3 +113,5 @@ int32_t chdir(const char *path) { // 改变工作目录为path
 }
 
 void ps(void) { _syscall0(SYS_PS); } // 显示任务列表
+
+int32_t execv(const char *path, const char *argv[]) { sys_execv(path, argv); }

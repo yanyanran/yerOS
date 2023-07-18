@@ -1,11 +1,11 @@
 #include "console.h"
+#include "exec.h"
 #include "fork.h"
 #include "fs.h"
 #include "print.h"
 #include "stdint.h"
 #include "string.h"
 #include "syscall.h"
-#include "thread.h"
 #include "thread.h"
 
 #define syscall_nr 32 // 最大支持的系统调用子功能个数
@@ -39,5 +39,6 @@ void syscall_init(void) {
   syscall_table[SYS_REWINDDIR] = sys_rewinddir;
   syscall_table[SYS_STAT] = sys_stat;
   syscall_table[SYS_PS] = sys_ps;
+  syscall_table[SYS_EXECV] = sys_execv;
   put_str("syscall_init done\n");
 }

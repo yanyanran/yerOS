@@ -6,6 +6,7 @@
 #include "stdint.h"
 
 #define MAX_FILES_OPEN_PER_PROC 8 // 每个任务可以打开的文件数
+#define TASK_NAME_LEN 16          // pcb中的name数组长度
 
 // 自定义通用函数类型，它将在很多线程函数中作为形参类型
 typedef void thread_func(void *);

@@ -26,7 +26,8 @@ enum SYSCALL_NR {
   SYS_READDIR,
   SYS_REWINDDIR,
   SYS_STAT,
-  SYS_PS
+  SYS_PS,
+  SYS_EXECV
 }; // 枚举结构存放系统调用子功能号
 uint32_t getpid(void);
 uint32_t write(int32_t fd, const void *buf, uint32_t count);
@@ -50,5 +51,6 @@ void rewinddir(struct dir *dir);
 int32_t stat(const char *path, struct stat *buf);
 int32_t chdir(const char *path);
 void ps(void);
+int32_t execv(const char *path, const char *argv[]);
 
 #endif /* LIB_USER_SYSCALL */
