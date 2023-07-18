@@ -118,6 +118,16 @@ put_char:
     ;将最后一行填为空白
     mov ebx, 3840   ;最后一行首字母的第一个字节偏移=1920*2=3840
     mov ecx, 80     ;一行80个字符，需移动80次
+
+global cls_screen ; clear系统调用对应内核实现
+cls_screen:
+    pushad
+    mov ax, SELECTOR_VIDEO
+    mov gs,ax
+
+    mov ebx,0
+    mov ecx, 80*25
+
 .cls:
     mov dword [gs: ebx], 0x0720  ;0x0720-> 黑底白字空格键
     add ebx, 2
@@ -207,3 +217,4 @@ put_int:
     jl .put_each_num
     popad
     ret
+    
