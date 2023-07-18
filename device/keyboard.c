@@ -109,7 +109,7 @@ static char keymap[][2] = {
 
 // 键盘中断处理程序
 static void intr_keyboard_handler(void) {
-  // bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
+  bool ctrl_down_last = ctrl_status; // 记录三个组合键是否被按下
   bool shift_down_last = shift_status;
   bool caps_lock_last = caps_lock_status;
   bool break_code;
@@ -165,6 +165,11 @@ static void intr_keyboard_handler(void) {
 
     uint8_t index = (scancode &= 0x00ff); // 针对高字节是e0的码,将高字节置0
     char cur_char = keymap[index][shift]; // 找到对应ASCII字符
+
+    if ((ctrl_down_last && cur_char == 'l') ||
+        (ctrl_down_last && cur_char == 'u')) {
+      cur_char -= 'a';
+    }
 
     if (cur_char) { // 只处理ASCII码不为0的键
       // 若缓冲区未满且待加入的cur_char不为0，则将其加入到缓冲区中

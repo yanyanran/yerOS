@@ -11,7 +11,21 @@ enum SYSCALL_NR {
   SYS_FORK,
   SYS_READ,
   SYS_PUTCHAR,
-  SYS_CLEAR
+  SYS_CLEAR,
+  SYS_GETCWD,
+  SYS_OPEN,
+  SYS_CLOSE,
+  SYS_LSEEK,
+  SYS_UNLINK,
+  SYS_MKDIR,
+  SYS_OPENDIR,
+  SYS_CLOSEDIR,
+  SYS_CHDIR,
+  SYS_RMDIR,
+  SYS_READDIR,
+  SYS_REWINDDIR,
+  SYS_STAT,
+  SYS_PS
 }; // 枚举结构存放系统调用子功能号
 uint32_t getpid(void);
 uint32_t write(int32_t fd, const void *buf, uint32_t count);
