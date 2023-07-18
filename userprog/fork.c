@@ -20,7 +20,7 @@ static int32_t copy_pcb_vaddrbitmap_stack0(struct task_struct *child_thread,
   child_thread->elapsed_ticks = 0;
   child_thread->status = TASK_READY;
   child_thread->ticks = child_thread->priority; // 把新进程时间片充满
-  child_thread->parent_pid = child_thread->pid;
+  child_thread->parent_pid = parent_thread->pid;
   child_thread->general_tag.next = child_thread->general_tag.prev = NULL;
   child_thread->all_list_tag.next = child_thread->all_list_tag.prev = NULL;
   block_desc_init(child_thread->u_block_desc);
@@ -51,7 +51,7 @@ static void copy_body_stack3(struct task_struct *child_thread,
   uint32_t prog_vaddr = 0;
 
   // 在父进程的用户空间中查找已有数据的页
-  while (idx_bit < btmp_bytes_len) {
+  while (idx_byte < btmp_bytes_len) {
     if (vaddr_btmp[idx_byte]) {
       idx_bit = 0;
       while (idx_bit < 8) {

@@ -7,12 +7,12 @@
 #include "keyboard.h"
 #include "print.h"
 #include "process.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "string.h"
 #include "syscall.h"
 #include "syscall_init.h"
 #include "thread.h"
-#include <stdint.h>
 
 void k_thread_a(void *arg);
 void k_thread_b(void *arg);
@@ -20,18 +20,6 @@ void u_prog_a(void);
 void u_prog_b(void);
 int prog_a_pid = 0;
 int prog_b_pid = 0;
-
-// init进程
-void init(void) {
-  uint32_t ret_pid = fork();
-  if (ret_pid) {
-    printf("i am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
-  } else {
-    printf("i am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
-  }
-  while (1) {
-  }
-}
 
 int main(void) {
   put_str("I am kernel\n");
@@ -49,18 +37,30 @@ int main(void) {
   // thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
   // thread_start("k_thread_b", 31, k_thread_b, "I am thread_b ");
 
-  struct stat obj_stat;
-  sys_stat("/", &obj_stat);
-  printf("/`s info\n i_no:%d\n size:%d\n filetype:%s\n", obj_stat.st_ino,
-         obj_stat.st_size, obj_stat.st_filetype == 2 ? "directory" : "regular");
-  sys_stat("/dir1", &obj_stat);
-  printf("/dir1`s info\n i_no:%d\n size:%d\n filetype:%s\n", obj_stat.st_ino,
-         obj_stat.st_size, obj_stat.st_filetype == 2 ? "directory" : "regular");
+  // struct stat obj_stat;
+  // sys_stat("/", &obj_stat);
+  // printf("/`s info\n i_no:%d\n size:%d\n filetype:%s\n", obj_stat.st_ino,
+  //        obj_stat.st_size, obj_stat.st_filetype == 2 ? "directory" : "regular");
+  // sys_stat("/dir1", &obj_stat);
+  // printf("/dir1`s info\n i_no:%d\n size:%d\n filetype:%s\n", obj_stat.st_ino,
+  //        obj_stat.st_size, obj_stat.st_filetype == 2 ? "directory" : "regular");
 
   while (1) {
     // console_put_str("Main ");
   };
   return 0;
+}
+
+// init进程
+void init(void) {
+  uint32_t ret_pid = fork();
+  if (ret_pid) {
+    printf("i am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
+  } else {
+    printf("i am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
+  }
+  while (1) {
+  }
 }
 
 // 线程中运行的函数
