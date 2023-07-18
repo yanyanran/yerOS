@@ -1,3 +1,4 @@
+#include "buildin_cmd.h"
 #include "debug.h"
 #include "file.h"
 #include "fs.h"
@@ -96,6 +97,8 @@ static int32_t cmd_parse(char *cmd_str, char **argv, char token) {
 
 void my_shell(void) {
   cwd_cache[0] = '/';
+  cwd_cache[0] = 0;
+
   while (1) {
     print_prompt();
     memset(final_path, 0, MAX_PATH_LEN);
@@ -110,9 +113,12 @@ void my_shell(void) {
       printf("num of arguments exceed %d\n", MAX_ARG_NR);
       continue;
     }
+
+    char buf[MAX_PATH_LEN] = {0};
     int32_t arg_idx = 0;
     while (arg_idx < argc) {
-      printf("%s ", argv[arg_idx]);
+      make_clear_abs_path(argv[arg_idx], buf);
+      printf("%s -> %s\n", argv[arg_idx], buf);
       arg_idx++;
     }
     printf("\n");

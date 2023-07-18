@@ -183,7 +183,7 @@ static void partition_format(struct disk *hd, struct partition *part) {
 }
 
 // 将最上层路径名解析出来（类似pop
-static char *path_parse(char *pathname, char *name_store) {
+char *path_parse(char *pathname, char *name_store) {
   if (pathname[0] == '/') { // 跳过'/'
     while (*(++pathname) == '/') {
     }
