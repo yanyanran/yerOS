@@ -92,7 +92,7 @@ struct inode *inode_open(struct partition *part, uint32_t inode_no) {
   /* 为使通过sys_malloc创建的新inode被所有任务共享，需将inode置于内核空间 */
   struct task_struct *cur = running_thread();
   uint32_t *cur_pgdir_bak = cur->pgdir;
-  cur_pgdir_bak = NULL; // 接下来分配的内存位于内核区
+  cur->pgdir = NULL; // 接下来分配的内存位于内核区
   inode_found = (struct inode *)sys_malloc(sizeof(struct inode));
   cur->pgdir = cur_pgdir_bak; // 恢复
 

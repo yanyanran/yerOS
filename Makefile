@@ -64,11 +64,10 @@ run: image
 
 
 run_gdb: image
-	#sh fdisk.sh
+	sh fdisk.sh
 	bochs -qf bochsrc.disk  ${BOCHS_GDB_FLAG} & 
 	gdb ./kernel.bin -ex ${BOCHS_PORT}
 	pkill bochs
 	make  clear
 clear:
 	rm -rf *.bin *.out *.lock *.o 
-	#*.img

@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "file.h"
 #include "global.h"
+#include "inode.h"
 #include "interrupt.h"
 #include "memory.h"
 #include "process.h"
