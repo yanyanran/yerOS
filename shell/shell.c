@@ -1,3 +1,4 @@
+#include "shell.h"
 #include "buildin_cmd.h"
 #include "debug.h"
 #include "file.h"
@@ -8,12 +9,12 @@
 #include "string.h"
 #include "syscall.h"
 
-#define cmd_len 128
 #define MAX_ARG_NR 16 // 加上命令名，最多支持15个参数
+#define cmd_len 128
 
-static char cmd_line[cmd_len] = {0}; // 存储输入命令
-static char final_path[cmd_len] = {0};
-char cwd_cache[64] = {0}; // 当前目录缓存（每次cd时会更新此内容
+char final_path[MAX_PATH_LEN] = {0};
+static char cmd_line[MAX_PATH_LEN] = {0}; // 存储输入命令
+char cwd_cache[MAX_PATH_LEN] = {0}; // 当前目录缓存（每次cd时会更新此内容
 char *argv[MAX_ARG_NR]; // 参数字符串数组（必须为全局变量，为以后exec程序可访问
 int32_t argc = -1;
 
@@ -97,7 +98,6 @@ static int32_t cmd_parse(char *cmd_str, char **argv, char token) {
 
 void my_shell(void) {
   cwd_cache[0] = '/';
-  cwd_cache[0] = 0;
 
   while (1) {
     print_prompt();
@@ -114,14 +114,28 @@ void my_shell(void) {
       continue;
     }
 
-    char buf[MAX_PATH_LEN] = {0};
-    int32_t arg_idx = 0;
-    while (arg_idx < argc) {
-      make_clear_abs_path(argv[arg_idx], buf);
-      printf("%s -> %s\n", argv[arg_idx], buf);
-      arg_idx++;
+    if (!strcmp("ls", argv[0])) {
+      buildin_ls(argc, argv);
+    } else if (!strcmp("cd", argv[0])) {
+      if (buildin_cd(argc, argv) != NULL) {
+        memset(cwd_cache, 0, MAX_PATH_LEN);
+        strcpy(cwd_cache, final_path);
+      }
+    } else if (!strcmp("pwd", argv[0])) {
+      buildin_pwd(argc, argv);
+    } else if (!strcmp("ps", argv[0])) {
+      buildin_ps(argc, argv);
+    } else if (!strcmp("clear", argv[0])) {
+      buildin_clear(argc, argv);
+    } else if (!strcmp("mkdir", argv[0])) {
+      buildin_mkdir(argc, argv);
+    } else if (!strcmp("rmdir", argv[0])) {
+      buildin_rmdir(argc, argv);
+    } else if (!strcmp("rm", argv[0])) {
+      buildin_rm(argc, argv);
+    } else {
+      printf("external command\n");
     }
-    printf("\n");
   }
   PANIC("my_shell: should not be here");
 }
