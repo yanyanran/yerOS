@@ -106,5 +106,6 @@ void thread_create(struct task_struct *pthread, thread_func func,
                    void *func_arg);
 void thread_yield(void);
 pid_t fork_pid(void);
+void sys_ps(void);
 
 #endif /* THREAD_THREAD */

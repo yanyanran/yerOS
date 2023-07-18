@@ -6,6 +6,7 @@
 #include "string.h"
 #include "syscall.h"
 #include "thread.h"
+#include "thread.h"
 
 #define syscall_nr 32 // 最大支持的系统调用子功能个数
 typedef void *syscall;
