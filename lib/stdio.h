@@ -1,6 +1,6 @@
 #ifndef LIB_STDIO
 #define LIB_STDIO
-#include "print.h"
+#include "stdint.h"
 
 typedef char *va_list; // 字符指针
 

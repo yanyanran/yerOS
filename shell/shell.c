@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "assert.h"
 #include "buildin_cmd.h"
 #include "debug.h"
 #include "file.h"
@@ -22,7 +23,7 @@ int32_t argc = -1;
 void print_prompt(void) { printf("[yers@localhost %s]$ ", cwd_cache); }
 
 static void readline(char *buf, int32_t count) {
-  ASSERT(buf != NULL && count > 0);
+  assert(buf != NULL && count > 0);
   char *pos = buf;
   while (read(stdin_no, pos, 1) != -1 &&
          (pos - buf) < count) { // 不出错情况下，直到找到回车符才返回
@@ -62,7 +63,7 @@ static void readline(char *buf, int32_t count) {
 
 // 分析字符串cmd_str中以token为分隔符的单词，将各单词指针存入argv数组
 static int32_t cmd_parse(char *cmd_str, char **argv, char token) {
-  ASSERT(cmd_str != NULL);
+  assert(cmd_str != NULL);
   int32_t arg_idx = 0;
   while (arg_idx < MAX_ARG_NR) {
     argv[arg_idx] = NULL;
@@ -133,8 +134,32 @@ void my_shell(void) {
       buildin_rmdir(argc, argv);
     } else if (!strcmp("rm", argv[0])) {
       buildin_rm(argc, argv);
-    } else {
-      printf("external command\n");
+    } else { // 如果是外部命令-> 需要从磁盘加载
+      int32_t pid = fork();
+      if (pid) { // 父进程
+        /* while必须加，否则父进程一般情况下会比子进程先执行，
+        因此会进行下一轮循环将findl_path清空，这样子进程将无法从final_path中获得参数*/
+        while (1) {
+        }
+      } else { // 子进程
+        make_clear_abs_path(argv[0], final_path);
+        argv[0] = final_path;
+        struct stat file_stat;
+        memset(&file_stat, 0, sizeof(struct stat));
+        if (stat(argv[0], &file_stat) == -1) { // 判断文件是否存在
+          printf("my_shell: cannot access %s: No such file or directory\n",
+                 argv[0]);
+        } else {
+          execv(argv[0], argv);
+        }
+        while (1) {
+        }
+      }
+    }
+    int32_t arg_idx = 0;
+    while (arg_idx < MAX_ARG_NR) {
+      argv[arg_idx] = NULL;
+      arg_idx++;
     }
   }
   PANIC("my_shell: should not be here");
