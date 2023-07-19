@@ -454,7 +454,7 @@ void sys_free(void *ptr) {
       // 将内存块回收到free_list
       list_append(&a->desc->free_list, &b->free_elem);
       // 判断此arena中的内存块是否都空闲，空闲释放arena
-      if (++a->cnt == a->desc->block_per_arena) {
+      if (++(a->cnt) == a->desc->block_per_arena) {
         uint32_t block_idx;
         for (block_idx = 0; block_idx < a->desc->block_per_arena; block_idx++) {
           struct mem_block *b = arena2block(a, block_idx);
@@ -539,7 +539,7 @@ void block_desc_init(struct mem_block_desc *desc_array) {
     list_init(&desc_array[desc_idx].free_list);
     block_size *= 2; // 更新为下一个规格内存块
     // 下标越低，内存块容量越小
-  }
+  } 
 }
 
 // 内存管理部分初始化入口

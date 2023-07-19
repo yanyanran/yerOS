@@ -6,7 +6,7 @@ kernelBin = kernel.bin
 printS = lib/kernel/print.asm 
 kernelS = kernel/kernel.asm
 include= -I lib/ -I kernel/ -I lib/kernel/ -I device/ -I thread/ -I userprog/ -I lib/user -I fs/ -I shell/
-GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector -g
+GCC_FLAGS = -c -Wall -m32 -ggdb -nostdinc -fno-pic -fno-builtin -fno-stack-protector -g -mno-sse
 
 
 
@@ -72,4 +72,4 @@ run_gdb: image
 	pkill bochs
 	make  clear
 clear:
-	rm -rf *.bin *.out *.lock *.o 
+	rm -rf *.bin *.out *.lock *.o

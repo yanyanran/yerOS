@@ -5,10 +5,10 @@
 #include "stdio_kernel.h"
 
 void list_init(struct list *list) {
-  list->head.prev = NULL;
   list->head.next = &list->tail;
   list->tail.prev = &list->head;
-  list->tail.next = NULL;
+  list->head.prev = &list->tail;
+  list->tail.next = &list->head;
 }
 
 // 把elem插入在元素before之前
@@ -63,7 +63,7 @@ struct list_elem *list_traversal(struct list *plist, func f, int arg) {
     return NULL;
   }
   while (elem != &plist->tail) {
-    //printk("%x \n", elem);
+    // printk("%x \n", elem);
     if (f(elem, arg)) {
       return elem;
     }

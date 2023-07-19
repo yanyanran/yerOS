@@ -397,7 +397,7 @@ uint32_t sys_write(int32_t fd, const void *buf, uint32_t count) {
 }
 
 // 从文件描述符fd指向文件中读count个字节到buf，成功返回读出字节数
-int32_t sys_read(int32_t fd, void *buf, uint32_t count) {
+int32_t  sys_read(int32_t fd, void *buf, uint32_t count) {
   ASSERT(buf != NULL);
   int32_t ret = -1;
   

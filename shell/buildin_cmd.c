@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "dir.h"
+#include "fs.h"
 #include "shell.h"
 #include "stdio.h"
 #include "string.h"
@@ -51,7 +52,8 @@ static void wash_path(char *old_abs_path, char *new_abs_path) {
 
 // 将path处理成绝对路径存在final_path中
 void make_clear_abs_path(char *path, char *final_path) {
-  char abs_path[MAX_PATH_LEN] = {0};
+  char abs_path[MAX_PATH_LEN];
+  memset(abs_path, 0, MAX_PATH_LEN);
 
   if (path[0] != '/') { // 不是绝对路径
     memset(abs_path, 0, MAX_PATH_LEN);

@@ -1,8 +1,10 @@
 #include "fs.h"
 #include "global.h"
 #include "interrupt.h"
+#include "list.h"
 #include "memory.h"
 #include "stdint.h"
+#include "stdio.h"
 #include "string.h"
 #include "thread.h"
 
@@ -90,13 +92,13 @@ static bool segment_load(int32_t fd, uint32_t offset, uint32_t filesz,
   return true;
 }
 
+void debug() {}
 // 从文件系统上加载用户程序pathname (成功返回程序起始地址，否则返-1
 static int32_t load(const char *pathname) {
   int32_t ret = -1;
   struct Elf32_Ehdr elf_header;
   struct Elf32_Phdr prog_header;
   memset(&elf_header, 0, sizeof(struct Elf32_Ehdr));
-
   int32_t fd = sys_open(pathname, O_RDONLY);
   if (fd == -1) {
     return -1;
@@ -122,6 +124,7 @@ static int32_t load(const char *pathname) {
   // 遍历所有程序头
   uint32_t prog_idx = 0;
   while (prog_idx < elf_header.e_phnum) {
+    debug();
     memset(&prog_header, 0, prog_header_size);
     sys_lseek(fd, prog_header_offset, SEEK_SET); // 将文件指针定位到程序头
     /* 只获取程序头 */
@@ -155,11 +158,17 @@ int32_t sys_execv(const char *path, const char *argv[]) {
   while (argv[argc]) {
     argc++; // 统计参数个数
   }
+
+  struct task_struct *cur = running_thread();
+  for (int i = 0; i < DESC_CNT; i++) {
+    list_init(&(cur->u_block_desc[i].free_list));
+  }
+
   int32_t entry_point = load(path); // 加载文件path
   if (entry_point == -1) {
     return -1;
   }
-  struct task_struct *cur = running_thread();
+
   memcpy(cur->name, path, TASK_NAME_LEN); // 修改进程名
   cur->name[TASK_NAME_LEN - 1] = 0;
   struct intr_stack *intr_0_stack = // 获得内核栈的地址(老进程的)
@@ -168,12 +177,13 @@ int32_t sys_execv(const char *path, const char *argv[]) {
   // 修改栈中数据为新进程
   intr_0_stack->ebx = (int32_t)argv;
   intr_0_stack->ecx = argc;
-  intr_0_stack->eip = (void *)entry_point;  // 可执行文件的入口地址
-  intr_0_stack->esp = (void *)0xc0000000;// 将内核栈中的用户栈指针esp恢复为新开始
+  intr_0_stack->eip = (void *)entry_point; // 可执行文件的入口地址
+  intr_0_stack->esp =
+      (void *)0xc0000000; // 将内核栈中的用户栈指针esp恢复为新开始
 
   /* exec不同于fork，为使新进程更快被执行，直接假装从中断返回 */
 
-  asm volatile("movl %0, %%esp; jmp intr_exit" 
+  asm volatile("movl %0, %%esp; jmp intr_exit"
                :
                : "g"(intr_0_stack)
                : "memory");
