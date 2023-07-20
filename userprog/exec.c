@@ -92,7 +92,6 @@ static bool segment_load(int32_t fd, uint32_t offset, uint32_t filesz,
   return true;
 }
 
-void debug() {}
 // 从文件系统上加载用户程序pathname (成功返回程序起始地址，否则返-1
 static int32_t load(const char *pathname) {
   int32_t ret = -1;
@@ -124,7 +123,6 @@ static int32_t load(const char *pathname) {
   // 遍历所有程序头
   uint32_t prog_idx = 0;
   while (prog_idx < elf_header.e_phnum) {
-    debug();
     memset(&prog_header, 0, prog_header_size);
     sys_lseek(fd, prog_header_offset, SEEK_SET); // 将文件指针定位到程序头
     /* 只获取程序头 */
@@ -182,7 +180,6 @@ int32_t sys_execv(const char *path, const char *argv[]) {
       (void *)0xc0000000; // 将内核栈中的用户栈指针esp恢复为新开始
 
   /* exec不同于fork，为使新进程更快被执行，直接假装从中断返回 */
-
   asm volatile("movl %0, %%esp; jmp intr_exit"
                :
                : "g"(intr_0_stack)

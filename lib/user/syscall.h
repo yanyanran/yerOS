@@ -2,7 +2,8 @@
 #define LIB_USER_SYSCALL
 #include "fs.h"
 #include "stdint.h"
-#include "thread.h"
+
+typedef int16_t pid_t;
 
 enum SYSCALL_NR {
   SYS_GETPID,
