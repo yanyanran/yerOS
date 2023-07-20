@@ -1,12 +1,11 @@
 #### 此脚本应该在command目录下执行
 
 BIN="prog_arg"
-CFLAGS="-Wall -c -fno-builtin -W -Wstrict-prototypes \
--Wmissing-prototypes -Wsystem-headers"
+CFLAGS="-c -Wall -m32 -ggdb -nostdinc -fno-builtin -fno-stack-protector -g -mno-sse"
 LIB="-I ../lib/ -I ../lib/user -I ../fs"
-OBJS="../string.o ../syscall.o ../stdio.o ../assert.o start.o"
+OBJS="../string.o ../syscall.o ../stdio.o ../assert.o "
 DD_IN=$BIN
-DD_OUT="/home/yanran/github/yerOS/boot.img"
+DD_OUT="../boot.img"
 
 nasm -f elf ./start.asm -o ./start.o
 ar rcs simplr_crt.a $OBJS start.o

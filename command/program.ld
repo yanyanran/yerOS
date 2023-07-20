@@ -1,4 +1,4 @@
-ENTRY(main)
+ENTRY(_start)
 SECTIONS
 {   
     /* 段起始位置 */

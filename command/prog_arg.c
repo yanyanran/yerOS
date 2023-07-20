@@ -3,7 +3,6 @@
 #include "syscall.h"
 
 int main(int argc, char **argv) {
-  printf("111111111111");
   int arg_idx = 0;
   // 打印接受的参数（argv[0]为程序名称，参数argv[1]为可执行文件路径
   while (arg_idx < argc) {

@@ -64,11 +64,11 @@ int32_t inode_bitmap_malloc(struct partition *part) {
 
 // 分配一个扇区
 int32_t block_bitmap_malloc(struct partition *part) {
-  int32_t bit_idx = bitmap_scan(&part->inode_bitmap, 1);
+  int32_t bit_idx = bitmap_scan(&part->block_bitmap, 1);
   if (bit_idx == -1) {
     return -1;
   }
-  bitmap_set(&part->inode_bitmap, bit_idx, 1);
+  bitmap_set(&part->block_bitmap, bit_idx, 1);
   return (part->sb->data_start_lba + bit_idx);
 }
 
