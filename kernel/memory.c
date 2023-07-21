@@ -468,6 +468,21 @@ void sys_free(void *ptr) {
   }
 }
 
+// 根据物理页地址在对应的内存池位图清0,不改动页表
+void free_a_phy_page(uint32_t pg_phy_addr) {
+  struct pool *mem_pool;
+  uint32_t bit_idx = 0;
+
+  if (pg_phy_addr >= user_pool.phy_addr_start) {
+    mem_pool = &user_pool;
+    bit_idx = (pg_phy_addr - user_pool.phy_addr_start) / PG_SIZE;
+  } else {
+    mem_pool = &kernel_pool;
+    bit_idx = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;
+  }
+  bitmap_set(&mem_pool->pool_bitmap, bit_idx, 0);
+}
+
 // --------------------------------------------------------------------------------------------
 
 // 初始化内存池
@@ -539,7 +554,7 @@ void block_desc_init(struct mem_block_desc *desc_array) {
     list_init(&desc_array[desc_idx].free_list);
     block_size *= 2; // 更新为下一个规格内存块
     // 下标越低，内存块容量越小
-  } 
+  }
 }
 
 // 内存管理部分初始化入口

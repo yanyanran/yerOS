@@ -72,7 +72,7 @@ struct task_struct {
   uint32_t *self_kstack; // 栈顶指针
   pid_t pid;
   enum task_status status;
-  char name[16];
+  char name[TASK_NAME_LEN];
   uint8_t priority; // 线程优先级
 
   uint8_t ticks;          // 上cpu执行的时间（优先级越高ticks越大
@@ -89,6 +89,7 @@ struct task_struct {
 
   uint32_t cwd_inode_nr; // 进程所在工作目录的inode编号
   int16_t parent_pid;    // 父进程pid
+  int8_t exit_status;    // 进程退出状态值
   uint32_t stack_magic;  // 栈的边界标记，检测栈的溢出
 };
 
@@ -108,5 +109,7 @@ void thread_create(struct task_struct *pthread, thread_func func,
 void thread_yield(void);
 pid_t fork_pid(void);
 void sys_ps(void);
+void thread_exit(struct task_struct *thread_over, bool need_schedule);
+struct task_struct *pid2thread(int32_t pid);
 
 #endif /* THREAD_THREAD */

@@ -3,6 +3,7 @@
 #include "fs.h"
 #include "stdint.h"
 #include "thread.h"
+#include "wait_exit.h"
 
 // 无参数的系统调用
 #define _syscall0(NUMBER)                                                      \
@@ -117,3 +118,7 @@ void ps(void) { _syscall0(SYS_PS); } // 显示任务列表
 int32_t execv(const char *path, char *argv[]) {
   return _syscall2(SYS_EXECV, path, argv);
 }
+
+void exit(int32_t status) { _syscall1(SYS_EXIT, status); }
+
+pid_t wait(int32_t *status) { _syscall1(SYS_WAIT, status); }
