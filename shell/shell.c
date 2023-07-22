@@ -137,10 +137,13 @@ void my_shell(void) {
     } else { // 如果是外部命令-> 需要从磁盘加载
       int32_t pid = fork();
       if (pid) { // 父进程
-        /* while必须加，否则父进程一般情况下会比子进程先执行，
-        因此会进行下一轮循环将findl_path清空，这样子进程将无法从final_path中获得参数*/
-        while (1) {
+        int32_t status;
+        int32_t child_pid = wait(&status);
+        // 此时子进程若没有执行exit, my_shell会被阻塞不再响应键入命令
+        if (child_pid == -1) {
+          panic("my_shell: no child\n");
         }
+        printf("child_pid %d, it's status: %d\n", child_pid, status);
       } else { // 子进程
         make_clear_abs_path(argv[0], final_path);
         argv[0] = final_path;
@@ -149,10 +152,9 @@ void my_shell(void) {
         if (stat(argv[0], &file_stat) == -1) { // 判断文件是否存在
           printf("my_shell: cannot access %s: No such file or directory\n",
                  argv[0]);
+          exit(-1);
         } else {
           execv(argv[0], argv);
-        }
-        while (1) {
         }
       }
     }

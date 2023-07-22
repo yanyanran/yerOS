@@ -1,13 +1,15 @@
 #### 此脚本应该在command目录下执行
 
-BIN="prog_arg"
+BIN="cat"
 CFLAGS="-c -Wall -m32 -ggdb -nostdinc -fno-builtin -fno-stack-protector -g -mno-sse"
-LIB="-I ../lib/ -I ../lib/user -I ../fs"
-OBJS="../string.o ../syscall.o ../stdio.o ../assert.o "
+LIB="-I ../lib/ -I ../lib/kernel/ -I ../lib/user/ -I \
+../kernel/ -I ../device/ -I ../thread/ -I \
+../userprog/ -I ../fs/ -I ../shell/"
+OBJS="../string.o ../syscall.o ../stdio.o ../assert.o start.o"
 DD_IN=$BIN
 DD_OUT="../boot.img"
 
-nasm -f elf ./start.asm -o ./start.o
+nasm -f elf ./start.asm -o start.o
 ar rcs simplr_crt.a $OBJS start.o
 gcc -m32 $CFLAGS $LIB -o $BIN".o" $BIN".c"
 ld -m elf_i386 -T program.ld $BIN".o" $OBJS simplr_crt.a -o $BIN

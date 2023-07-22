@@ -59,17 +59,17 @@ image: build
 	dd if=${loaderBin} of=boot.img bs=512 seek=2 conv=notrunc
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
-run: image
+run: #image
 	sh fdisk.sh
 	cd command && sh compile.sh   
 	${BOCHS_PATH} -f bochsrc.disk
 
 
-run_gdb: image
+run_gdb: #image
 	sh fdisk.sh
 	bochs -qf bochsrc.disk  ${BOCHS_GDB_FLAG} & 
 	gdb ./kernel.bin -ex ${BOCHS_PORT}
 	pkill bochs
 	make clear
 clear:
-	rm -rf *.bin *.out *.lock *.o
+	rm -rf *.bin *.out *.lock *.o 

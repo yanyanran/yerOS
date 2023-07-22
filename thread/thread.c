@@ -354,7 +354,7 @@ void thread_init(void) {
   list_init(&thread_all_list);
   pid_pool_init();
 
-  process_execute(init, "init"); // 第一个初始化，这是第一个进程，init进程pid为1
+  //process_execute(init, "init"); // 第一个初始化，这是第一个进程，init进程pid为1
   make_main_thread(); // 为当前main函数创建线程，在其pcb中写入线程信息
   idle_thread = thread_start("idle", 10, idle, NULL); // 创建idle线程
   put_str("thread_init done\n");
