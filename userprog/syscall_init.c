@@ -42,6 +42,6 @@ void syscall_init(void) {
   syscall_table[SYS_PS] = sys_ps;
   syscall_table[SYS_WAIT] = sys_wait;
   syscall_table[SYS_EXIT] = sys_exit;
-
+  syscall_table[SYS_EXECV] = sys_execv;
   put_str("syscall_init done\n");
 }

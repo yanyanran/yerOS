@@ -108,7 +108,10 @@ int32_t file_create(struct dir *parent_dir, char *filename, uint8_t flag) {
     printk("in file_creat: allocate inode failed\n");
     return -1;
   }
-
+  /* 为使通过sys_malloc创建的新inode被所有任务共享，需将inode置于内核空间 */
+  struct task_struct *cur = running_thread();
+  uint32_t *cur_pgdir_bak = cur->pgdir;
+  cur->pgdir = NULL; // 接下来分配的内存位于内核区
   struct inode *new_file_inode =
       (struct inode *)sys_malloc(sizeof(struct inode));
   if (new_file_inode == NULL) {
@@ -116,6 +119,7 @@ int32_t file_create(struct dir *parent_dir, char *filename, uint8_t flag) {
     rollback_step = 1;
     goto rollback;
   }
+  cur->pgdir = cur_pgdir_bak; // 恢复
   inode_init(inode_no, new_file_inode);
 
   int fd_idx = get_free_slot_in_global(); // file_table数组下标
