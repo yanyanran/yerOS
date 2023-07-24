@@ -23,6 +23,17 @@ bool ioq_empty(struct ioqueue *ioq) {
   return ioq->head == ioq->tail;
 }
 
+// 返回ioqueue中的数据长度
+uint32_t ioq_length(struct ioqueue *ioq) {
+  uint32_t len = 0;
+  if (ioq->head >= ioq->tail) {
+    len = ioq->head - ioq->tail;
+  } else {
+    len = bufsize - (ioq->tail - ioq->head);
+  }
+  return len;
+}
+
 // 使当前生产者/消费者在此缓冲区上等待
 static void ioq_wait(struct task_struct **waiter) {
   ASSERT(*waiter == NULL && waiter != NULL);

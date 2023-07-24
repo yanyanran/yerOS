@@ -44,7 +44,7 @@ int main(void) {
     }
   }
 
-  int32_t fd1 = sys_open("/dir/file1", O_CREAT | O_RDWR);
+  int32_t fd1 = sys_open("/file1", O_CREAT | O_RDWR);
   sys_write(fd1, "hello gty dog!\n", 16);
 
   cls_screen();
