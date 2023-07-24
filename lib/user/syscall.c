@@ -123,7 +123,7 @@ void exit(int32_t status) { _syscall1(SYS_EXIT, status); }
 
 pid_t wait(int32_t *status) { return _syscall1(SYS_WAIT, status); }
 
-int32_t pipe(int32_t pipefd[2]) { return _syscall1(SYS_PIPE, pipefd[2]); }
+int32_t pipe(int32_t pipefd[2]) { return _syscall1(SYS_PIPE, pipefd); }
 
 void fd_redirect(uint32_t old_local_fd, uint32_t new_local_fd) {
   _syscall2(SYS_REDIRECT, old_local_fd, new_local_fd);
