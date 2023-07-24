@@ -429,6 +429,9 @@ int32_t sys_read(int32_t fd, void *buf, uint32_t count) {
       char *buffer = buf;
       uint32_t bytes_read = 0;
       while (bytes_read < count) { // 每次从键盘缓冲区中获取1个字符
+        if (*(buffer-1) == '\n') {
+          break;
+        }
         *buffer = ioq_getchar(&kbd_buf);
         bytes_read++;
         buffer++;
@@ -862,6 +865,23 @@ int32_t sys_stat(const char *path, struct stat *buf) {
   }
   dir_close(searched_record.parent_dir);
   return ret;
+}
+
+// 显示系统支持的内部命令
+void sys_help(void) {
+  printk("\
+buildin commands:\n\
+      ls: show directory or file information\n\
+      cd: change current work directory\n\
+      mkdir: create a directory\n\
+      rmdir: remove a empty directory\n\
+      rm: remove a regular file\n\
+      pwd: show current work directory\n\
+      ps: show process information\n\
+      clear: clear screen\n\
+shortcut key:\n\
+      ctrl+l: clear screen\n\
+      ctrl+u: clear input\n\n");
 }
 
 // 在磁盘上搜索文件系统，若没有则格式化分区创建文件系统

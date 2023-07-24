@@ -11,7 +11,7 @@
 #define esc '\033' // 八进制表示
 #define backspace '\b'
 #define tab '\t'
-#define enter '\r'
+#define enter '\n'
 #define delete '\177'
 
 // 以上不可见字符一律定义为0
@@ -174,6 +174,7 @@ static void intr_keyboard_handler(void) {
     if (cur_char) { // 只处理ASCII码不为0的键
       // 若缓冲区未满且待加入的cur_char不为0，则将其加入到缓冲区中
       if (!ioq_full(&kbd_buf)) {
+        put_char(cur_char);
         ioq_putchar(&kbd_buf, cur_char);
       }
       return;
@@ -189,7 +190,7 @@ static void intr_keyboard_handler(void) {
       caps_lock_status = !caps_lock_status;
     }
   } else {
-    //put_str("unknown key\n");
+    // put_str("unknown key\n");
   }
 }
 

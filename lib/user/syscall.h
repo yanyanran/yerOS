@@ -31,7 +31,9 @@ enum SYSCALL_NR {
   SYS_EXECV,
   SYS_EXIT,
   SYS_WAIT,
-  SYS_PIPE
+  SYS_PIPE,
+  SYS_REDIRECT,
+  SYS_HELP
 }; // 枚举结构存放系统调用子功能号
 
 uint32_t getpid(void);
@@ -60,5 +62,7 @@ int32_t execv(const char *path, char *argv[]);
 void exit(int32_t status);
 pid_t wait(int32_t *status);
 int32_t pipe(int32_t pipefd[2]);
+void fd_redirect(uint32_t old_local_fd, uint32_t new_local_fd);
+void help(void);
 
 #endif /* LIB_USER_SYSCALL */

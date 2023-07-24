@@ -4,18 +4,23 @@
 #include "syscall.h"
 
 int main(int argc, char **argv) {
-  if (argc > 2 || argc == 1) {
-    printf("cat: only support 1 argument.\neg: cat filename\n");
+  if (argc > 2) {
+    printf("cat: argument error\n");
     exit(-2);
   }
+  if (argc == 1) {
+    char buf[512] = {0};
+    read(0, buf, 512);
+    printf("%s", buf);
+    exit(0);
+  }
   int buf_size = 1024;
-  char abs_path[512] = {0}; // 存参数的绝对路径
+  char abs_path[512] = {0};
   void *buf = malloc(buf_size);
   if (buf == NULL) {
     printf("cat: malloc memory failed\n");
     return -1;
   }
-
   if (argv[1][0] != '/') {
     getcwd(abs_path, 512);
     strcat(abs_path, "/");
@@ -28,11 +33,10 @@ int main(int argc, char **argv) {
     printf("cat: open: open %s failed\n", argv[1]);
     return -1;
   }
-
   int read_bytes = 0;
   while (1) {
     read_bytes = read(fd, buf, buf_size);
-    if (read_bytes == -1) { // 读到文件尾了
+    if (read_bytes == -1) {
       break;
     }
     write(1, buf, read_bytes);
