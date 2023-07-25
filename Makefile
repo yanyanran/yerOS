@@ -16,13 +16,13 @@ BOCHS_GDB_FLAG='gdbstub:enabled=1,port=1234,text_base=0,data_base=0,bss_base=0'
 build:
 	nasm -I include/ -o ${mbrBin} ${mbrS} 
 	nasm -I include/ -o ${loaderBin} ${loaderS} 
-	nasm -f elf -o print.o ${printS}
 	nasm -f elf -o kernel.o ${kernelS}
 	nasm -f elf -o switch.o thread/switch.asm
 
 image: build
 	gcc ${include} ${GCC_FLAGS} -o main.o kernel/main.c
 	gcc ${include} ${GCC_FLAGS} -o interrupt.o kernel/interrupt.c
+	gcc ${include} ${GCC_FLAGS} -o print.o lib/kernel/print.c
 	gcc ${include} ${GCC_FLAGS} -o timer.o device/timer.c
 	gcc ${include} ${GCC_FLAGS} -o init.o kernel/init.c
 	gcc ${include} ${GCC_FLAGS} -o debug.o kernel/debug.c
@@ -60,7 +60,7 @@ image: build
 	dd if=${loaderBin} of=boot.img bs=512 seek=2 conv=notrunc
 	dd if=${kernelBin} of=boot.img bs=512 count=200 seek=9 conv=notrunc
 
-run: #image
+run: image
 	sh fdisk.sh
 	cd command && sh compile.sh   
 	${BOCHS_PATH} -f bochsrc.disk
